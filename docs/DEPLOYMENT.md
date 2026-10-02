@@ -26,9 +26,13 @@ Only ports 22, 80 and 443 are open. The database and Redis are not published at 
 ### 1.2 Prepare the server (as root, once)
 
 ```bash
-scp deploy/scripts/bootstrap-server.sh root@SERVER:
-ssh root@SERVER 'SSH_PUBKEY="ssh-ed25519 AAAA… you@laptop" bash bootstrap-server.sh'
+scp deploy/scripts/bootstrap-server.sh ubuntu@SERVER:
+ssh ubuntu@SERVER "sudo SSH_PUBKEY='$(cat ~/.ssh/id_ed25519.pub; cat deploy_key.pub)' bash bootstrap-server.sh"
 ```
+
+The **first key is yours**: your admin account (`ubuntu` on OVH) keeps it, with `sudo`. **All keys**
+may log in as `deploy`, which runs the app with Docker but has no `sudo`. So the GitHub deploy key
+can deploy but cannot take over the server.
 
 This sets up the following; after it, log in as `deploy@SERVER`, because root and password logins are off:
 
@@ -61,8 +65,9 @@ short-lived token to pull them, and removes it afterwards: no long-lived registr
 From your computer, copy the deploy files once (later deploys copy them automatically):
 
 ```bash
-rsync -az --exclude '.env*' deploy/ deploy@SERVER:/opt/itstarter/deploy/
-rsync -az --mkpath infra/nginx/snippets/ deploy@SERVER:/opt/itstarter/infra/nginx/snippets/
+scp -r deploy deploy@SERVER:/opt/itstarter/       # (rsync works too, where installed)
+ssh deploy@SERVER "mkdir -p /opt/itstarter/infra/nginx"
+scp -r infra/nginx/snippets deploy@SERVER:/opt/itstarter/infra/nginx/
 ```
 
 Then on the server:
@@ -189,12 +194,15 @@ Tested on a development PC (2026-10-02). The exact production stack ran locally 
 - Monitor: alerts on start and on recovery, with no repeats.
 - Smoke test (browser) against the HTTPS site.
 - `shellcheck` on every script, and `actionlint` on both workflows.
+- `bootstrap-server.sh` in an Ubuntu 24.04 container, twice. Users, keys, sudo rights, the SSH
+  config, folders, cron and logrotate were real; systemd, the firewall, swap and the Docker install
+  were stand-ins.
 
 Not yet tested, because it needs the real server and accounts:
 
 - Let's Encrypt itself (both the first certificate on port 80 and renewal through Nginx).
 - The GitHub Actions runs.
-- `bootstrap-server.sh` on a fresh OVH VPS.
+- `bootstrap-server.sh` on a real OVH VPS (firewall, swap, Docker install, systemd).
 - Telegram delivery.
 - OVH Object Storage itself (MinIO speaks the same S3 protocol).
 

@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 # One-time setup of a fresh OVHcloud VPS (Ubuntu 24.04). Run as root, once:
 #   SSH_PUBKEY="$(cat your_key.pub deploy_key.pub)" bash bootstrap-server.sh
+# The FIRST key is yours: it gets an admin account with sudo (ADMIN_USER, default: the account
+# that ran sudo, e.g. "ubuntu" on OVH, otherwise "itadmin"). All keys may log in as "deploy".
 # What it does (safe to run again):
 #   - updates the system, turns on automatic security updates
 #   - time zone Asia/Phnom_Penh, a 2 GB swap file on small servers
 #   - installs Docker (official packages)
-#   - creates the "deploy" user (SSH key only, may run Docker), then turns off SSH passwords and root login
+#   - creates the "deploy" user (SSH keys only, may run Docker; no sudo) and your admin account
+#     (your key only, sudo), then turns off SSH passwords and root login
 #   - firewall: only SSH, HTTP and HTTPS; fail2ban against SSH password guessing
 #   - folders /opt/itstarter, /var/backups/itstarter, /var/log/itstarter
 #   - scheduled jobs: nightly backup, monthly restore drill, monitoring, certificate reload, cleanup
 set -euo pipefail
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
+ADMIN_USER="${ADMIN_USER:-${SUDO_USER:-itadmin}}"
+[[ "$ADMIN_USER" != root ]] || ADMIN_USER=itadmin
 APP_DIR=/opt/itstarter
 SSH_PUBKEY="${SSH_PUBKEY:-}"
 
@@ -61,8 +66,24 @@ while IFS= read -r key; do
 done <<<"$SSH_PUBKEY"
 chown "$DEPLOY_USER:$DEPLOY_USER" "$keys" && chmod 600 "$keys"
 
+# An admin account for YOU (the FIRST key only, never the GitHub deploy key), with sudo, so the
+# server can still be administered once passwords and root login are switched off.
+say "Admin user $ADMIN_USER"
+admin_key="$(printf '%s\n' "$SSH_PUBKEY" | sed '/^$/d' | head -n 1)"
+id "$ADMIN_USER" >/dev/null 2>&1 || adduser --disabled-password --gecos "" "$ADMIN_USER"
+usermod -aG sudo,docker "$ADMIN_USER"
+echo "$ADMIN_USER ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/90-itstarter-admin
+chmod 440 /etc/sudoers.d/90-itstarter-admin
+visudo -cq
+admin_home="$(getent passwd "$ADMIN_USER" | cut -d: -f6)"
+admin_keys="$admin_home/.ssh/authorized_keys"
+install -d -m 700 -o "$ADMIN_USER" -g "$ADMIN_USER" "$admin_home/.ssh"
+touch "$admin_keys"
+if [[ -n "$admin_key" ]] && ! grep -qF "$admin_key" "$admin_keys"; then echo "$admin_key" >>"$admin_keys"; fi
+chown "$ADMIN_USER:$ADMIN_USER" "$admin_keys" && chmod 600 "$admin_keys"
+
 say "SSH: keys only, no root login"
-if [[ -s "$keys" ]]; then
+if [[ -s "$keys" && -s "$admin_keys" ]]; then
   cat >/etc/ssh/sshd_config.d/99-itstarter.conf <<'SSHD'
 PasswordAuthentication no
 KbdInteractiveAuthentication no
@@ -70,7 +91,7 @@ PermitRootLogin no
 SSHD
   sshd -t && systemctl reload ssh
 else
-  echo "!! No SSH key for $DEPLOY_USER yet: SSH passwords and root login are still ON."
+  echo "!! No SSH key yet: SSH passwords and root login are still ON."
   echo "!! Run again with SSH_PUBKEY=\"...\" to lock them down."
 fi
 

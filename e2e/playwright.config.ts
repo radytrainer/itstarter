@@ -17,7 +17,12 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: [['list'], ['html', { outputFolder: './playwright-report', open: 'never' }]],
+  // On GitHub, failures also appear as annotations on the run (readable without downloading logs).
+  reporter: [
+    ['list'],
+    ...(process.env.CI ? [['github'] as const] : []),
+    ['html', { outputFolder: './playwright-report', open: 'never' }],
+  ],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8088',
     trace: 'retain-on-failure',
