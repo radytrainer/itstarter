@@ -35,6 +35,8 @@ for (const locale of ['en', 'km'] as const) {
     await setLanguage(page, locale);
     await page.goto('/login');
     await expectAccessible(page, 'login');
+    await page.goto('/register');
+    await expectAccessible(page, 'register');
     await login(page);
     for (const path of ['/', '/progress', '/badges', '/profile', '/offline']) {
       await page.goto(path);

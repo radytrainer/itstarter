@@ -45,7 +45,9 @@ export default async function ProgressPage({ searchParams }: { searchParams: Sea
     params.dir === 'asc' || params.dir === 'desc' ? params.dir : sort === 'name' ? 'asc' : 'desc';
   const filters = new URLSearchParams({ sort, dir });
   if (params.q?.trim()) filters.set('q', params.q.trim().slice(0, 50));
-  if (cohorts.some((c) => c.id === params.cohortId)) filters.set('cohortId', params.cohortId!);
+  if (params.cohortId === 'none' || cohorts.some((c) => c.id === params.cohortId)) {
+    filters.set('cohortId', params.cohortId!);
+  }
   if (params.status === 'active' || params.status === 'disabled')
     filters.set('status', params.status);
   const page = Math.max(1, Number(params.page) || 1);
@@ -118,6 +120,7 @@ export default async function ProgressPage({ searchParams }: { searchParams: Sea
           className={inputClass}
         >
           <option value="">{t('allClasses')}</option>
+          <option value="none">{t('noClass')}</option>
           {cohorts.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}

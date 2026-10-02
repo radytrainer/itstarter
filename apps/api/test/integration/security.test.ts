@@ -23,6 +23,8 @@ const PUBLIC = new Set([
   'GET /api/health/ready',
   'POST /api/auth/login',
   'POST /api/auth/logout',
+  'GET /api/auth/registration',
+  'POST /api/auth/register',
 ]);
 
 const isWrite = (method: string) => !['GET', 'HEAD', 'OPTIONS'].includes(method);

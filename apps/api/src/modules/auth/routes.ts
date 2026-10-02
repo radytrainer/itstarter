@@ -2,6 +2,8 @@ import type { FastifyPluginAsync } from 'fastify';
 import {
   changePasswordRequestSchema,
   loginRequestSchema,
+  registerRequestSchema,
+  type RegistrationStatus,
   updateMeRequestSchema,
   type ApiSuccess,
   type AuthUser,
@@ -14,14 +16,37 @@ import {
   setSessionCookie,
   type SessionCookie,
 } from '../../plugins/auth';
+import type { RegistrationService } from './registration';
 import type { AuthService } from './service';
 
 interface AuthRouteOptions {
   auth: AuthService;
+  registration: RegistrationService;
   cookie: SessionCookie;
 }
 
-export const authRoutes: FastifyPluginAsync<AuthRouteOptions> = async (app, { auth, cookie }) => {
+export const authRoutes: FastifyPluginAsync<AuthRouteOptions> = async (
+  app,
+  { auth, registration, cookie },
+) => {
+  /** Public: can students create their own account? (The login page shows the link if so.) */
+  app.get('/auth/registration', async (): Promise<ApiSuccess<RegistrationStatus>> => ({
+    success: true,
+    data: { open: registration.isOpen },
+  }));
+
+  /** Public: a student creates their own account and is signed in straight away. */
+  app.post('/auth/register', async (request, reply): Promise<ApiSuccess<{ user: AuthUser }>> => {
+    const body = parseWith(registerRequestSchema, request.body);
+    const result = await registration.register(
+      body,
+      { ip: request.ip, userAgent: request.headers['user-agent'] },
+      request.log,
+    );
+    setSessionCookie(reply, cookie, result.token, result.expiresAt);
+    return { success: true, data: { user: result.user } };
+  });
+
   app.post('/auth/login', async (request, reply): Promise<ApiSuccess<{ user: AuthUser }>> => {
     const body = parseWith(loginRequestSchema, request.body);
     const result = await auth.login(

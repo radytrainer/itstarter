@@ -184,7 +184,11 @@ export class ProgressReportService {
       isNull(users.deletedAt),
       studentScope(actor),
       search,
-      query.cohortId ? eq(students.cohortId, query.cohortId) : undefined,
+      query.cohortId === 'none'
+        ? isNull(students.cohortId)
+        : query.cohortId
+          ? eq(students.cohortId, query.cohortId)
+          : undefined,
       query.status ? eq(users.status, query.status) : undefined,
     );
     return sql`select ${students.userId} as user_id from ${students}

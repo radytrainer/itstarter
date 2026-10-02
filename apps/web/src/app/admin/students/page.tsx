@@ -86,6 +86,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Sea
           <option value="">
             {t('students.class')}: {t('common.all')}
           </option>
+          <option value="none">{t('students.noClass')}</option>
           {cohorts.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}

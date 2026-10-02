@@ -44,7 +44,9 @@
       "password": "Password",
       "submit": "Log in",
       "submitting": "Logging in…",
-      "forgot": "Forgot your password? Ask your teacher for help."
+      "forgot": "Forgot your password? Ask your teacher for help.",
+      "noAccount": "New here?",
+      "createAccount": "Create a student account"
     },
     "changePassword": {
       "title": "Choose your own password",
@@ -61,6 +63,22 @@
         "SAME_AS_USERNAME": "Don’t use your username as your password.",
         "SAME_AS_CURRENT": "Choose something different from your old password."
       }
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Start learning IT in a few seconds — free.",
+      "name": "Your name",
+      "nameHint": "Your real name, so your teacher knows who you are.",
+      "username": "Choose a username",
+      "usernameHint": "You log in with it. Lowercase letters, numbers, dot, dash or underscore (3–50), e.g. sokha.chan",
+      "usernameInvalid": "Use 3–50 lowercase letters or numbers (you may also use . _ -), starting with a letter or number.",
+      "usernameReserved": "That username is reserved. Please choose another one.",
+      "password": "Choose a password",
+      "submit": "Create my account",
+      "submitting": "Creating…",
+      "haveAccount": "Already have an account?",
+      "logIn": "Log in",
+      "closed": "New accounts are made by your teacher. Please ask them for your username and password."
     }
   },
   "errors": {
@@ -74,7 +92,9 @@
     "FORBIDDEN": "You do not have access to this page.",
     "WEAK_PASSWORD": "Please choose a different password.",
     "LESSON_INCOMPLETE": "Finish all the activities first, then try again.",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "USERNAME_TAKEN": "That username is already taken. Try another one.",
+    "REGISTRATION_CLOSED": "New accounts are made by your teacher. Please ask them."
   },
   "feedback": {
     "correct": ["Nice work!", "Excellent!", "You got it!", "Great thinking!", "Well done!"],
@@ -363,7 +383,8 @@
       "students": "Students",
       "classes": "Classes",
       "lessons": "Published lessons",
-      "recent": "Recent activity"
+      "recent": "Recent activity",
+      "unplaced": "{count, plural, one {# new student has no class yet. Put them in a class} other {# new students have no class yet. Put them in a class}}"
     },
     "students": {
       "title": "Students",

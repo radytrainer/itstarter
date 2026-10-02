@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LOCALES } from './i18n';
 import { ROLES } from './domain';
+import { usernameSchema } from './admin';
 
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
@@ -19,6 +20,40 @@ export const changePasswordRequestSchema = z.object({
   newPassword: z.string().max(PASSWORD_MAX_LENGTH),
 });
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
+
+/** Students create their own account (when sign-up is open). */
+export const registerRequestSchema = z.object({
+  displayName: z.string().trim().min(1).max(80),
+  username: usernameSchema,
+  password: z.string().max(PASSWORD_MAX_LENGTH),
+  /** The language the student was using; kept for their account. */
+  locale: z.enum(LOCALES).optional(),
+  /** Hidden from people; bots fill it in. Must stay empty. */
+  website: z.string().max(200).optional(),
+});
+export type RegisterRequest = z.infer<typeof registerRequestSchema>;
+
+/** Names nobody may sign up with (they look official). Prefix matches too, e.g. "admin2". */
+export const RESERVED_USERNAME_PREFIXES = [
+  'admin',
+  'administrator',
+  'root',
+  'teacher',
+  'staff',
+  'support',
+  'itstarter',
+  'system',
+  'moderator',
+] as const;
+
+export function isReservedUsername(username: string): boolean {
+  const name = normalizeUsername(username);
+  return RESERVED_USERNAME_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
+export interface RegistrationStatus {
+  open: boolean;
+}
 
 export type PasswordProblem = 'TOO_SHORT' | 'TOO_LONG' | 'SAME_AS_USERNAME' | 'SAME_AS_CURRENT';
 

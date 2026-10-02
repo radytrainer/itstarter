@@ -63,7 +63,8 @@ export const studentListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   q: z.string().trim().min(1).max(50).optional(),
-  cohortId: z.uuid().optional(),
+  /** A class id, or "none" for students without a class (e.g. who signed up themselves). */
+  cohortId: z.union([z.uuid(), z.literal('none')]).optional(),
   status: z.enum(['active', 'disabled']).optional(),
 });
 

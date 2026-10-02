@@ -14,6 +14,8 @@ const envSchema = z.object({
   TRUST_PROXY: z.string().default('loopback,uniquelocal'),
   /** Send the session cookie only over HTTPS. Defaults to true in production. */
   COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+  /** Students may create their own accounts ("open") or only staff create them ("closed"). */
+  SELF_REGISTRATION: z.enum(['open', 'closed']).default('open'),
 });
 
 /** Values published in .env.example: fine on a developer's machine, never on a real server. */

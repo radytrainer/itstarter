@@ -3,6 +3,9 @@ import { getTranslations } from 'next-intl/server';
 import { AppShell } from '@/components/app-shell';
 import { LoginForm } from '@/components/login-form';
 import { Card } from '@/components/ui/card';
+import Link from 'next/link';
+import type { RegistrationStatus } from '@itstarter/shared';
+import { apiGet } from '@/lib/server-api';
 import { getCurrentUser } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +15,7 @@ export default async function LoginPage() {
   if (user) redirect(user.mustChangePassword ? '/change-password' : '/');
   const t = await getTranslations('auth.login');
   const ta = await getTranslations('app');
+  const registration = await apiGet<RegistrationStatus>('/api/auth/registration');
 
   return (
     <AppShell signedIn={false}>
@@ -26,6 +30,17 @@ export default async function LoginPage() {
         <Card>
           <LoginForm />
         </Card>
+        {registration.open && (
+          <p className="text-center">
+            {t('noAccount')}{' '}
+            <Link
+              href="/register"
+              className="font-bold text-brand-700 underline underline-offset-4"
+            >
+              {t('createAccount')}
+            </Link>
+          </p>
+        )}
         <p className="text-center text-sm text-muted">{t('forgot')}</p>
         <p className="text-center font-bold text-brand-700">{ta('tagline')}</p>
       </div>

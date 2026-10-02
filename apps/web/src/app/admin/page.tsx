@@ -52,6 +52,10 @@ export default async function AdminHome() {
   const course = await apiGet<CourseDetail>(`/api/courses/${defaultCourse.id}`);
   const lessons = course.worlds.reduce((n, w) => n + w.lessonsTotal, 0);
   const recent = isAdmin ? await apiGet<AuditEntry[]>('/api/admin/audit-logs?pageSize=6') : [];
+  // Students who signed up themselves start without a class: admins place them.
+  const unplaced = isAdmin
+    ? (await apiGetPage<unknown[]>('/api/teacher/students?pageSize=1&cohortId=none')).meta.total
+    : 0;
   const dateFormat = new Intl.DateTimeFormat(locale === 'km' ? 'km-KH' : 'en-GB', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -82,6 +86,18 @@ export default async function AdminHome() {
           href={isAdmin ? '/admin/content' : '/'}
         />
       </div>
+      {unplaced > 0 && (
+        <Link
+          href="/admin/students?cohortId=none"
+          className="flex items-center gap-3 rounded-card border border-amber-200 bg-amber-50 p-4 font-bold text-amber-950 hover:bg-amber-100"
+        >
+          <span aria-hidden="true" className="text-2xl">
+            🆕
+          </span>
+          <span className="flex-1">{t('overview.unplaced', { count: unplaced })}</span>
+          <span aria-hidden="true">→</span>
+        </Link>
+      )}
       {isAdmin && (
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-extrabold">{t('overview.recent')}</h2>
