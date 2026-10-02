@@ -90,10 +90,14 @@ test('admin unpublishes a lesson and students stop seeing it', async ({ page, br
     await csrfPatch(page, `/api/admin/lessons/${lessonId}`, { status: 'published' });
   }
 
-  // The lesson editor opens with all six steps.
+  // The lesson editor shows every step of the lesson (6 steps + the game round on a fresh install).
+  const lesson = (await (await page.request.get(`/api/admin/lessons/${lessonId}`)).json()).data as {
+    activities: unknown[];
+  };
+  expect(lesson.activities.length).toBeGreaterThanOrEqual(6);
   await page.goto(`/admin/content/lessons/${lessonId}`);
   await expect(page.getByRole('heading', { name: 'Lesson settings' })).toBeVisible();
-  await expect(page.locator('details')).toHaveCount(6);
+  await expect(page.locator('details')).toHaveCount(lesson.activities.length);
 });
 
 test('a teacher sees only their class and cannot open admin-only pages', async ({ page }) => {

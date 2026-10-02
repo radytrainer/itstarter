@@ -38,7 +38,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=moderate
       - name: Migrations match the schema
         run: |
-          npm run db:generate -- --name ci-drift-check
+          # Call the workspace directly: through the root script, npm swallows --name.
+          npm run db:generate -w @itstarter/api -- --name ci-drift-check
           if [ -n "$(git status --porcelain apps/api/drizzle)" ]; then
             echo "::error::src/db/schema changed without a migration. Run 'npm run db:generate' and commit the result."
             git status --porcelain apps/api/drizzle
