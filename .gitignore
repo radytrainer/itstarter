@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit real env files
+.env
+.env.*
+!.env.example
+
+# tests
+coverage/
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# e2e output
+e2e/screenshots/
+e2e/test-results/
+e2e/playwright-report/
+
+# Local deploy tests
+deploy/.env.staging-local
+deploy/.local-backups/
+deploy/.monitor/
+deploy/.deploy.lock
+deploy/deploy-history.log

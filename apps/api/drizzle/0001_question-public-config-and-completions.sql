@@ -1,0 +1,2 @@
+ALTER TABLE "questions" ADD COLUMN "public_config" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "student_lesson_progress" ADD COLUMN "completions" integer DEFAULT 0 NOT NULL;

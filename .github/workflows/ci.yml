@@ -1,0 +1,153 @@
+name: CI
+
+# Every pull request and every push to main must pass all four jobs (see docs/TESTING.md).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, types, unit tests, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: API unit tests
+        run: npm test -w @itstarter/api
+      - name: Web tests (with coverage minimums)
+        run: npm run test:coverage -w @itstarter/web
+      - name: No known vulnerabilities in production dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+      - name: Migrations match the schema
+        run: |
+          npm run db:generate -- --name ci-drift-check
+          if [ -n "$(git status --porcelain apps/api/drizzle)" ]; then
+            echo "::error::src/db/schema changed without a migration. Run 'npm run db:generate' and commit the result."
+            git status --porcelain apps/api/drizzle
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-coverage
+          path: apps/web/coverage
+          retention-days: 7
+
+  integration:
+    name: API tests with PostgreSQL + Redis (coverage minimums)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: itstarter
+          POSTGRES_USER: itstarter
+          POSTGRES_PASSWORD: ci_only_password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U itstarter -d itstarter"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgres://itstarter:ci_only_password@localhost:5432/itstarter
+      REDIS_URL: redis://localhost:6379
+      APP_ORIGIN: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Unit + integration tests together, with coverage minimums
+        run: npm run test:coverage -w @itstarter/api
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-coverage
+          path: apps/api/coverage
+          retention-days: 7
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  e2e:
+    name: End-to-end (phones, accessibility, security headers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Local settings (development values are fine on a throwaway CI machine)
+        run: cp .env.example .env
+      - name: Start the whole stack (Nginx → web → API → PostgreSQL + Redis)
+        run: docker compose up -d --build --wait
+      - run: npm run docker:migrate
+      - run: npm run docker:seed
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests (Pixel 7 + iPhone 14 sizes)
+        run: npm run test:e2e
+      - name: Service logs (on failure)
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v

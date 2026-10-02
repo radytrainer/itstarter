@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- IT Starter 2028 app icon: a rocket on the brand indigo. Source for the PNG icons
+       (regenerate with: npm run icons -w apps/web). -->
+  <rect width="512" height="512" rx="112" fill="#4f46e5"/>
+  <circle cx="380" cy="132" r="10" fill="#c7d2fe"/>
+  <circle cx="122" cy="168" r="7" fill="#c7d2fe"/>
+  <circle cx="404" cy="300" r="6" fill="#c7d2fe"/>
+  <g transform="rotate(45 256 256)">
+    <!-- flame -->
+    <path d="M226 352 Q256 452 286 352 Z" fill="#fbbf24"/>
+    <path d="M240 352 Q256 410 272 352 Z" fill="#f97316"/>
+    <!-- fins -->
+    <path d="M206 282 L162 350 L206 340 Z" fill="#f43f5e"/>
+    <path d="M306 282 L350 350 L306 340 Z" fill="#f43f5e"/>
+    <!-- body -->
+    <path d="M256 92 C312 140 318 230 306 352 L206 352 C194 230 200 140 256 92 Z" fill="#ffffff"/>
+    <path d="M256 92 C282 114 298 140 306 172 L206 172 C214 140 230 114 256 92 Z" fill="#f43f5e"/>
+    <!-- window -->
+    <circle cx="256" cy="236" r="30" fill="#4f46e5"/>
+    <circle cx="256" cy="236" r="18" fill="#a5b4fc"/>
+  </g>
+</svg>

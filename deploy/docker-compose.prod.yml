@@ -1,0 +1,189 @@
+# Production (and staging) stack on the OVHcloud VPS. Lives in /opt/itstarter with deploy/.env.
+#   ./scripts/deploy.sh v1.2.0          (normally run by GitHub Actions, see docs/DEPLOYMENT.md)
+# Images are built once by CI and pulled from the registry; nothing is built on the server.
+name: itstarter
+
+x-logging: &logging
+  # Log rotation: at most 5 × 10 MB per container.
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-itstarter}
+      POSTGRES_USER: ${POSTGRES_USER:-itstarter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in deploy/.env}
+      TZ: ${TZ:-Asia/Phnom_Penh}
+    # Sized for a small VPS (2–4 GB RAM); see docs/DEPLOYMENT.md to tune.
+    command:
+      [
+        'postgres',
+        '-c',
+        'shared_buffers=256MB',
+        '-c',
+        'effective_cache_size=768MB',
+        '-c',
+        'max_connections=50',
+        '-c',
+        'log_min_duration_statement=1000',
+      ]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No published port: only the API (and the backup job) reach the database.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in deploy/.env}
+    # Cache only (no persistence); a password even though only the private network can reach it.
+    command:
+      [
+        'sh',
+        '-c',
+        'exec redis-server --save "" --appendonly no --maxmemory 192mb --maxmemory-policy allkeys-lru --requirepass "$$REDIS_PASSWORD"',
+      ]
+    healthcheck:
+      test: ['CMD-SHELL', 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX in deploy/.env}/api:${APP_VERSION:-not-deployed}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      NODE_ENV: production
+      APP_VERSION: ${APP_VERSION}
+      DATABASE_URL: postgres://${POSTGRES_USER:-itstarter}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itstarter}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      APP_ORIGIN: https://${DOMAIN:?Set DOMAIN in deploy/.env}${PUBLIC_PORT_SUFFIX:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: ${TZ:-Asia/Phnom_Penh}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    image: ${IMAGE_PREFIX}/web:${APP_VERSION:-not-deployed}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      API_INTERNAL_URL: http://api:4000
+      TZ: ${TZ:-Asia/Phnom_Penh}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DOMAIN: ${DOMAIN}
+      # Empty in production; ":8443" for a local HTTPS test on another port.
+      PUBLIC_PORT_SUFFIX: ${PUBLIC_PORT_SUFFIX:-}
+      # 1 year in production. 0 for local tests (browsers would remember HSTS for "localhost").
+      HSTS_MAX_AGE: ${HSTS_MAX_AGE:-31536000}
+      # Only these variables are filled into the templates (Nginx's own $vars are left alone).
+      NGINX_ENVSUBST_FILTER: '^(DOMAIN|PUBLIC_PORT_SUFFIX|HSTS_MAX_AGE)$$'
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ../infra/nginx/snippets:/etc/nginx/snippets:ro
+      - certs:/etc/letsencrypt:ro
+      - acme:/var/www/acme:ro
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1/healthz']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Renews the Let's Encrypt certificate (checks twice a day; renews 30 days before expiry).
+  # The first certificate is requested by scripts/init-certificate.sh.
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    logging: *logging
+    profiles: ['tls']
+    volumes:
+      - certs:/etc/letsencrypt
+      - acme:/var/www/acme
+    entrypoint: ['sh', '-c', 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/acme --quiet; sleep 12h & wait $${!}; done']
+
+  # One-off jobs (not started by `up`): migrations and the seed.
+  #   docker compose run --rm tools node apps/api/dist/migrate.js
+  tools:
+    image: ${IMAGE_PREFIX}/api:${APP_VERSION:-not-deployed}
+    profiles: ['tools']
+    logging: *logging
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-itstarter}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itstarter}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      APP_ORIGIN: https://${DOMAIN}${PUBLIC_PORT_SUFFIX:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_DEMO_USERS: ${SEED_DEMO_USERS:-false}
+      SEED_TEACHER_PASSWORD: ${SEED_TEACHER_PASSWORD:-}
+      SEED_STUDENT_PASSWORD: ${SEED_STUDENT_PASSWORD:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy # the seed refreshes the content cache
+
+  # Encrypted backups and restore drills (see scripts/backup.sh). Run by cron on the host:
+  #   docker compose run --rm backup backup
+  #   docker compose run --rm backup drill
+  backup:
+    build: ./backup
+    image: itstarter-backup:local
+    profiles: ['tools']
+    logging: *logging
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB:-itstarter}
+      PGUSER: ${POSTGRES_USER:-itstarter}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:?Set BACKUP_PASSPHRASE in deploy/.env}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_REMOTE_KEEP_DAYS: ${BACKUP_REMOTE_KEEP_DAYS:-60}
+      # OVH Object Storage (S3-compatible). Leave S3_BUCKET empty to keep backups on the server only.
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      TZ: ${TZ:-Asia/Phnom_Penh}
+    volumes:
+      - ${BACKUP_DIR:-/var/backups/itstarter}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  certs:
+  acme:

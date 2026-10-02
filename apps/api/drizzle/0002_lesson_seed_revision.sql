@@ -1,0 +1,1 @@
+ALTER TABLE "lessons" ADD COLUMN "seed_revision" smallint DEFAULT 1 NOT NULL;
