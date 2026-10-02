@@ -21,7 +21,7 @@ export default async function LoginPage() {
     <AppShell signedIn={false}>
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4">
         <header className="flex flex-col items-center gap-2 text-center">
-          <p className="text-6xl animate-pop" aria-hidden="true">
+          <p className="text-6xl" aria-hidden="true">
             🚀
           </p>
           <h1 className="text-3xl font-extrabold">{t('title')}</h1>

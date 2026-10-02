@@ -1,2 +1,14 @@
+# Public pages (home, login, sign-up) may appear in search results so students can find the site.
+# Everything behind the login, and the API, stays out.
 User-agent: *
-Disallow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /lessons
+Disallow: /worlds
+Disallow: /progress
+Disallow: /profile
+Disallow: /badges
+Disallow: /change-password
+Disallow: /status
+Disallow: /design
+Disallow: /offline
