@@ -97,6 +97,7 @@ backup can ever be restored.**
 
 The server builds the images itself. Same safety as above: safety backup, migrate, seed, health
 check and automatic rollback.
+
 ```bash
 ssh deploy@SERVER
 git clone https://github.com/radytrainer/itstarter.git /opt/itstarter
@@ -105,14 +106,15 @@ cp deploy/.env.example deploy/.env && nano deploy/.env   # or copy your prepared
 ./deploy/scripts/init-certificate.sh                        # once, after DNS points to the server
 ./deploy/scripts/build-and-deploy.sh                        # build + deploy this commit
 ```
+
 Updating later:
+
 ```bash
 cd /opt/itstarter && git pull && ./deploy/scripts/build-and-deploy.sh
 ```
+
 Use a version tag (`git checkout v1.2.0`) to deploy a release. Going back means checking out the
 older tag and running the script again (its images are still on the server).
-
-
 
 **Staging:** go to Actions → Deploy → Run workflow and choose staging. It deploys the selected branch or tag.
 
