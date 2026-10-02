@@ -30,6 +30,12 @@ if [[ -n "${IMAGE_PREFIX_OVERRIDE:-}" ]]; then set_env_value IMAGE_PREFIX "$IMAG
 log "Deploying $version (now running: ${previous:-nothing})"
 set_env_value APP_VERSION "$version"
 
+# Nginx starts fresh after every change: it reads its current config and the app containers' new
+# addresses (otherwise it can keep answering 502). Takes about a second.
+restart_nginx() {
+  compose up -d --no-deps --force-recreate --wait --wait-timeout 60 nginx
+}
+
 rollback() {
   local reason="$1"
   if [[ -z "$previous" || "$previous" == "$version" ]]; then
@@ -38,7 +44,7 @@ rollback() {
   fi
   log "Rolling back to $previous ($reason)"
   set_env_value APP_VERSION "$previous"
-  if compose up -d --wait --wait-timeout 180 api web nginx; then
+  if compose up -d --wait --wait-timeout 180 api web nginx && restart_nginx; then
     alert "Deploy of $version FAILED ($reason). Rolled back to $previous, which is running."
   else
     alert "Deploy of $version FAILED ($reason) and the rollback to $previous is NOT healthy. Check now."
@@ -64,6 +70,7 @@ compose run --rm tools node apps/api/dist/seed.js || rollback "seed failed"
 
 log "Starting $version"
 compose up -d --wait --wait-timeout 180 --remove-orphans || rollback "containers not healthy"
+restart_nginx || rollback "Nginx did not start"
 
 log "Checking $SITE_URL"
 live=""
