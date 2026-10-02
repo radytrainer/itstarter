@@ -20,13 +20,17 @@ fi
 
 # 2. Every container is running and healthy.
 for service in postgres redis api web nginx; do
-  state="$(docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' \
-    "$(compose ps -q "$service" 2>/dev/null | head -n 1)" 2>/dev/null || echo 'missing')"
-  [[ "$state" == "running healthy" || "$state" == "running " ]] || problems+=("container $service: ${state:-missing}")
+  id="$(compose ps -a -q "$service" 2>/dev/null | head -n 1)"
+  if [[ -z "$id" ]]; then
+    problems+=("container $service: not created")
+    continue
+  fi
+  state="$(docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$id")"
+  [[ "$state" == "running healthy" || "$state" == "running " ]] || problems+=("container $service: $state")
 done
 
-# 3. Disk space.
-used="$(df -P / | awk 'NR==2 {gsub("%", "", $5); print $5}')"
+# 3. Disk space. "Capacity" is the second-to-last column (device names may contain spaces).
+used="$(df -P / | awk 'NR==2 {gsub("%", "", $(NF-1)); print $(NF-1)}')"
 [[ "$used" -lt 85 ]] || problems+=("disk: ${used}% used")
 
 # 4. The HTTPS certificate is not about to expire (it renews 30 days before).
@@ -49,16 +53,17 @@ else
   problems+=("backup: no successful backup yet")
 fi
 
-# Alert only on changes.
+# Alert only when WHICH checks fail changes (not when a number in the message changes).
 now="$(printf '%s\n' "${problems[@]:-}" | sed '/^$/d' | sort)"
-before="$(cat "$STATE_DIR/problems" 2>/dev/null || true)"
-if [[ "$now" != "$before" ]]; then
+failing="$(printf '%s\n' "$now" | cut -d: -f1 | sed '/^$/d')"
+before="$(cat "$STATE_DIR/failing" 2>/dev/null || true)"
+if [[ "$failing" != "$before" ]]; then
   if [[ -n "$now" ]]; then
     alert "Problems: $(echo "$now" | paste -sd ';' - | sed 's/;/; /g')"
   else
     alert "All checks OK again."
   fi
-  printf '%s' "$now" >"$STATE_DIR/problems"
+  printf '%s' "$failing" >"$STATE_DIR/failing"
 fi
 if [[ -z "$now" ]]; then
   log "All checks OK"

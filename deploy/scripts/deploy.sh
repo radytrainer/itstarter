@@ -18,8 +18,14 @@ exec 9>"$lock"
 # One deploy at a time (flock is on every Linux server; skipped where it doesn't exist).
 if command -v flock >/dev/null; then flock -n 9 || fail "Another deploy is running"; fi
 
-free_mb="$(df -Pm "$DEPLOY_DIR" | awk 'NR==2 {print $4}')"
+compose run --rm --no-deps --entrypoint sh certbot -c "test -f /etc/letsencrypt/live/$DOMAIN/fullchain.pem" \
+  >/dev/null 2>&1 || fail "No HTTPS certificate for $DOMAIN yet: run ./scripts/init-certificate.sh first"
+
+free_mb="$(df -Pm "$DEPLOY_DIR" | awk 'NR==2 {print $(NF-2)}')"
 [[ "$free_mb" -ge 1024 ]] || fail "Only ${free_mb} MB free disk space; need 1 GB (try: docker image prune -a)"
+
+# GitHub Actions passes the registry path of the images it just built.
+if [[ -n "${IMAGE_PREFIX_OVERRIDE:-}" ]]; then set_env_value IMAGE_PREFIX "$IMAGE_PREFIX_OVERRIDE"; fi
 
 log "Deploying $version (now running: ${previous:-nothing})"
 set_env_value APP_VERSION "$version"

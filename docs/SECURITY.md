@@ -143,7 +143,14 @@ The local Docker stack (a production build on `http://localhost`) keeps working 
 - **Heavy reports are not rate-limited separately:** analytics is cached for 5 minutes; the
   progress report is limited by Nginx (20 req/s per IP) and only open to staff.
 
-### For Phase 18 (production server)
+### Production server (Phase 18)
 
-HTTPS with HSTS in Nginx, a Redis password (`requirepass`), firewall (22/80/443 only), and secrets
-only in the server's environment — see the production checklist there.
+Done, see [DEPLOYMENT.md](DEPLOYMENT.md) §5:
+
+- **HTTPS everywhere.** Let's Encrypt with automatic renewal, HSTS for 1 year, TLS 1.2/1.3 only (TLS 1.1 tested as refused), and HTTP and `www.` redirected to `https://itstarter.store`.
+- **Redis has a password**, and the API refuses to start on a real server without one (16+ characters).
+- **Nothing private is published.** PostgreSQL and Redis have no published ports; only Nginx listens (80/443).
+- **The server is locked down.** Firewall allows 22/80/443 only, fail2ban, SSH keys only with no root login, automatic security updates.
+- **Secrets live only in `deploy/.env` on the server.** Images contain none, and GitHub lends the server a short-lived registry token per deploy.
+- **Backups are AES-256 encrypted** before they leave the database container, are checksummed, are copied off-site, and pass a monthly automatic restore drill.
+- **Deploys are guarded.** CI must pass; production deploys only from version tags with an optional required reviewer; version names are checked before reaching SSH; a failed deploy rolls back automatically.

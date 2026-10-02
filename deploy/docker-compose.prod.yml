@@ -3,8 +3,7 @@
 # Images are built once by CI and pulled from the registry; nothing is built on the server.
 name: itstarter
 
-x-logging: &logging
-  # Log rotation: at most 5 × 10 MB per container.
+x-logging: &logging # Log rotation: at most 5 × 10 MB per container.
   driver: json-file
   options:
     max-size: '10m'
@@ -131,7 +130,12 @@ services:
     volumes:
       - certs:/etc/letsencrypt
       - acme:/var/www/acme
-    entrypoint: ['sh', '-c', 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/acme --quiet; sleep 12h & wait $${!}; done']
+    entrypoint:
+      [
+        'sh',
+        '-c',
+        'trap exit TERM; while :; do certbot renew --webroot -w /var/www/acme --quiet; sleep 12h & wait $${!}; done',
+      ]
 
   # One-off jobs (not started by `up`): migrations and the seed.
   #   docker compose run --rm tools node apps/api/dist/migrate.js

@@ -1,0 +1,136 @@
+name: Deploy
+
+# Staging: "Run workflow" → environment: staging (any branch or tag).
+# Production: push a version tag (git tag v1.2.0 && git push origin v1.2.0), or "Run workflow" on a
+# tag with environment: production. Production can require a reviewer's approval
+# (Settings → Environments → production → Required reviewers). See docs/DEPLOYMENT.md.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, production]
+        default: staging
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ci:
+    name: CI (all checks must pass first)
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    name: Build and push images
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      prefix: ${{ steps.meta.outputs.prefix }}
+    steps:
+      - name: Production deploys only from version tags
+        if: (inputs.environment || 'production') == 'production' && github.ref_type != 'tag'
+        run: |
+          echo "::error::Production is deployed from a version tag (e.g. v1.2.0), not from ${{ github.ref_name }}."
+          exit 1
+      - uses: actions/checkout@v4
+      - id: meta
+        name: Version and image names
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then version="$GITHUB_REF_NAME"; else version="sha-${GITHUB_SHA::7}"; fi
+          # The version goes into an SSH command: allow only safe characters.
+          if ! [[ "$version" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+            echo "::error::Version '$version' may only contain letters, digits, '.', '_' and '-'."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prefix=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.prefix }}/api:${{ steps.meta.outputs.version }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.prefix }}/web:${{ steps.meta.outputs.version }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  deploy:
+    name: Deploy to ${{ inputs.environment || 'production' }}
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://${{ vars.DOMAIN }}
+    env:
+      VERSION: ${{ needs.images.outputs.version }}
+      SSH_TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Copy the deploy files (never deploy/.env or backups)
+        run: |
+          rsync -az --exclude '.env*' --exclude '.local-backups' --exclude '.monitor' \
+            --exclude 'deploy-history.log' --exclude '.deploy.lock' \
+            deploy/ "$SSH_TARGET:/opt/itstarter/deploy/"
+          rsync -az --mkpath infra/nginx/snippets/ "$SSH_TARGET:/opt/itstarter/infra/nginx/snippets/"
+      - name: Deploy ${{ env.VERSION }}
+        run: |
+          # This job's short-lived token lets the server pull the images; it is removed afterwards.
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh "$SSH_TARGET" docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # shellcheck disable=SC2029 # $VERSION is meant to expand here (it was checked above)
+          ssh "$SSH_TARGET" "cd /opt/itstarter/deploy && IMAGE_PREFIX_OVERRIDE='${{ needs.images.outputs.prefix }}' ./scripts/deploy.sh '$VERSION'"
+      - name: Forget the registry token
+        if: always()
+        run: ssh "$SSH_TARGET" docker logout ghcr.io || true
+
+  smoke:
+    name: Smoke test the live site
+    needs: [images, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Smoke test https://${{ vars.DOMAIN }}
+        env:
+          E2E_BASE_URL: https://${{ vars.DOMAIN }}
+          SMOKE_HTTP_URL: http://${{ vars.DOMAIN }}
+          EXPECT_VERSION: ${{ needs.images.outputs.version }}
+          SMOKE_ADMIN_PASSWORD: ${{ secrets.SMOKE_ADMIN_PASSWORD }}
+        run: npm run test:smoke

@@ -8,6 +8,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: '.',
+  // The smoke test runs against deployed sites with its own config (playwright.smoke.config.ts).
+  testIgnore: 'smoke.spec.ts',
   globalSetup: './global-setup.ts',
   outputDir: './test-results',
   timeout: 60_000,

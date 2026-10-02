@@ -3,13 +3,13 @@
 A small, friendly, mobile-first e-learning platform that helps new students feel at home with technology
 before formal IT training: **Learn → Play → Practice → Create → Explore**.
 
-> **Project status:** Phases 1–17 are complete. All **105 lessons** (about 1,950 questions) across 7 worlds are playable — including
+> **Project status:** Phases 1–18 are complete. All **105 lessons** (about 1,950 questions) across 7 worlds are playable — including
 > **English for Beginners** (grammar, vocabulary, listening with a 🔊 button, spelling) — 15 lessons per
 > world, 15–20 questions per lesson (Logic Playground: 20–22), plus a 🎮 **game round** in every lesson
 > (catch the answer, memory cards, robot coding, word builder). Every Check shows the right answer and,
 > for most questions, a short explanation. Lessons include generated maths, keyboard and mouse practice, Office simulations, Safe-or-Dangerous scenes and an AI
 > prompt builder. Badges, achievements, levels and streaks are awarded automatically. Teachers and admins manage students, classes, lessons and badges in the admin area at `/admin`, and follow every student's learning progress at `/admin/progress` (with CSV export), including a
-> **commitment** score (days learned, active minutes, lessons — last 4 weeks) and a per-student performance report; students see their own habit and strengths on **My progress** (`/progress`). The analytics page (`/admin/analytics`) shows completion, engagement, quiz performance and the hardest lessons and activities. The app can be installed on Android and iPhone home screens and shows a friendly offline page ([docs/PWA.md](docs/PWA.md)). Security was reviewed in Phase 16 (strict CSP, production safety checks, automated route-guard tests — see [docs/SECURITY.md](docs/SECURITY.md)). Every change is checked by CI: about 520 automated tests (unit, API with a real database, components, and real-browser tests at phone sizes including accessibility), coverage minimums and a dependency audit — run them all with `npm run verify` ([docs/TESTING.md](docs/TESTING.md)). Next: production on OVHcloud (Phase 18). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design and roadmap.
+> **commitment** score (days learned, active minutes, lessons — last 4 weeks) and a per-student performance report; students see their own habit and strengths on **My progress** (`/progress`). The analytics page (`/admin/analytics`) shows completion, engagement, quiz performance and the hardest lessons and activities. The app can be installed on Android and iPhone home screens and shows a friendly offline page ([docs/PWA.md](docs/PWA.md)). Security was reviewed in Phase 16 (strict CSP, production safety checks, automated route-guard tests — see [docs/SECURITY.md](docs/SECURITY.md)). Every change is checked by CI: about 520 automated tests (unit, API with a real database, components, and real-browser tests at phone sizes including accessibility), coverage minimums and a dependency audit — run them all with `npm run verify` ([docs/TESTING.md](docs/TESTING.md)). Production on OVHcloud is ready to set up at **https://itstarter.store**: HTTPS, encrypted off-site backups with monthly restore drills, Telegram alerts, and one-click deploys from GitHub with automatic rollback ([docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)). Next: final QA on real phones (Phase 19). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design and roadmap.
 
 ## Stack
 
@@ -101,6 +101,7 @@ origin just like production.
 | [docs/DATABASE.md](docs/DATABASE.md)               | Tables, migrations, seeding                                  |
 | [docs/SECURITY.md](docs/SECURITY.md)               | Authentication, roles, CSRF, rate limits                     |
 | [docs/TESTING.md](docs/TESTING.md)                 | Test layers, coverage, CI, how to run everything             |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)           | Production server: setup, deploy, backups, restore, alerts   |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)     | UI components, accessibility, Khmer/English                  |
 | [docs/LEARNING_ENGINE.md](docs/LEARNING_ENGINE.md) | How lessons, questions, XP and progress work; adding content |
 

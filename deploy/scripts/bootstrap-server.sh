@@ -25,7 +25,7 @@ say "System updates"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 apt-get upgrade -yq
-apt-get install -yq ca-certificates curl gnupg ufw fail2ban unattended-upgrades openssl jq util-linux
+apt-get install -yq ca-certificates curl gnupg ufw fail2ban unattended-upgrades openssl jq util-linux rsync
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
 say "Time zone and swap"

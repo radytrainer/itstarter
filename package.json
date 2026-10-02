@@ -34,7 +34,8 @@
     "test:e2e": "playwright test -c e2e/playwright.config.ts",
     "e2e:reset": "node e2e/reset-test-students.mjs",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "test:smoke": "playwright test -c e2e/playwright.smoke.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
