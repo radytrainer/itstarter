@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time setup of a fresh OVHcloud VPS (Ubuntu 24.04). Run as root, once:
-#   SSH_PUBKEY="ssh-ed25519 AAAA... you@laptop" bash bootstrap-server.sh
+#   SSH_PUBKEY="$(cat your_key.pub deploy_key.pub)" bash bootstrap-server.sh
 # What it does (safe to run again):
 #   - updates the system, turns on automatic security updates
 #   - time zone Asia/Phnom_Penh, a 2 GB swap file on small servers
@@ -54,7 +54,11 @@ usermod -aG docker "$DEPLOY_USER"
 install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh"
 keys="/home/$DEPLOY_USER/.ssh/authorized_keys"
 touch "$keys"
-if [[ -n "$SSH_PUBKEY" ]] && ! grep -qF "$SSH_PUBKEY" "$keys"; then echo "$SSH_PUBKEY" >>"$keys"; fi
+# SSH_PUBKEY may hold several keys, one per line (yours + the GitHub deploy key).
+while IFS= read -r key; do
+  [[ -n "$key" ]] || continue
+  grep -qF "$key" "$keys" || echo "$key" >>"$keys"
+done <<<"$SSH_PUBKEY"
 chown "$DEPLOY_USER:$DEPLOY_USER" "$keys" && chmod 600 "$keys"
 
 say "SSH: keys only, no root login"
