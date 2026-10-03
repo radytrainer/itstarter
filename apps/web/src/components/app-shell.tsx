@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { LanguageSwitcher } from './language-switcher';
 import { NavLinks } from './nav-links';
+import { Logo } from './logo';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -27,9 +28,7 @@ export async function AppShell({ children, signedIn, focus = false }: AppShellPr
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-2">
           <Link href="/" className="flex min-h-11 items-center gap-2 font-extrabold text-ink">
-            <span aria-hidden="true" className="text-2xl">
-              🚀
-            </span>
+            <Logo size={32} />
             <span className="whitespace-nowrap text-base min-[400px]:text-lg">{t('name')}</span>
           </Link>
           {showNav && <NavLinks variant="top" />}

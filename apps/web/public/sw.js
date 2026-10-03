@@ -10,7 +10,7 @@
  * What it never does: store pages or API answers. Pages contain a student's name and progress,
  * and school computers are shared — nothing personal is kept on the device.
  */
-const VERSION = 'v1';
+const VERSION = 'v2'; // v2: new logo (bump to refresh cached icons and files)
 const STATIC_CACHE = `itstarter-static-${VERSION}`;
 const OFFLINE_CACHE = `itstarter-offline-${VERSION}`;
 const OFFLINE_URL = '/offline';

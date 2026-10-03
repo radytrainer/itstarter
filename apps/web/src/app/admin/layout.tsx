@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { AdminNav } from '@/components/admin/admin-nav';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { requireStaff } from '@/lib/session';
+import { Logo } from '@/components/logo';
 
 // Everything under /admin: teachers and admins. Each page and API route checks again.
 export const dynamic = 'force-dynamic';
@@ -16,9 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-2">
           <Link href="/admin" className="flex min-h-11 items-center gap-2 font-extrabold">
-            <span aria-hidden="true" className="text-2xl">
-              🚀
-            </span>
+            <Logo size={32} />
             <span className="whitespace-nowrap">{t('title')}</span>
           </Link>
           <div className="flex items-center gap-2">

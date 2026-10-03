@@ -1,22 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- IT Starter 2028 app icon: a rocket on the brand indigo. Source for the PNG icons
-       (regenerate with: npm run icons -w apps/web). -->
+  <!-- IT Starter 2028 logo: a learning map. A student follows the dotted path through the
+       worlds (coloured stops) to the goal pin with a laptop. On the brand indigo.
+       Source for the PNG icons (regenerate with: npm run icons -w apps/web). -->
   <rect width="512" height="512" rx="112" fill="#4f46e5"/>
-  <circle cx="380" cy="132" r="10" fill="#c7d2fe"/>
-  <circle cx="122" cy="168" r="7" fill="#c7d2fe"/>
-  <circle cx="404" cy="300" r="6" fill="#c7d2fe"/>
-  <g transform="rotate(45 256 256)">
-    <!-- flame -->
-    <path d="M226 352 Q256 452 286 352 Z" fill="#fbbf24"/>
-    <path d="M240 352 Q256 410 272 352 Z" fill="#f97316"/>
-    <!-- fins -->
-    <path d="M206 282 L162 350 L206 340 Z" fill="#f43f5e"/>
-    <path d="M306 282 L350 350 L306 340 Z" fill="#f43f5e"/>
-    <!-- body -->
-    <path d="M256 92 C312 140 318 230 306 352 L206 352 C194 230 200 140 256 92 Z" fill="#ffffff"/>
-    <path d="M256 92 C282 114 298 140 306 172 L206 172 C214 140 230 114 256 92 Z" fill="#f43f5e"/>
-    <!-- window -->
-    <circle cx="256" cy="236" r="30" fill="#4f46e5"/>
-    <circle cx="256" cy="236" r="18" fill="#a5b4fc"/>
+
+  <g transform="translate(-31 -38) scale(1.12)">
+  <!-- folded map: three panels -->
+  <path d="M88 178 L200 146 L200 404 L88 436 Z" fill="#eef2ff"/>
+  <path d="M200 146 L312 178 L312 436 L200 404 Z" fill="#c7d2fe"/>
+  <path d="M312 178 L424 146 L424 404 L312 436 Z" fill="#eef2ff"/>
+
+  <!-- the learning path -->
+  <path d="M138 372 C176 330 214 360 246 322 C278 284 252 246 294 226 C322 212 336 236 352 232"
+        fill="none" stroke="#4f46e5" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 20"/>
+  <!-- world stops -->
+  <circle cx="200" cy="350" r="11" fill="#8b5cf6"/>
+  <circle cx="252" cy="312" r="11" fill="#0ea5e9"/>
+  <circle cx="268" cy="262" r="11" fill="#10b981"/>
+  <circle cx="300" cy="224" r="11" fill="#f59e0b"/>
+
+  <!-- the student: graduation cap, face, green T-shirt -->
+  <path d="M104 412 C104 376 172 376 172 412 Z" fill="#10b981"/>
+  <circle cx="138" cy="352" r="24" fill="#f4c095"/>
+  <circle cx="130" cy="355" r="3" fill="#1e1b4b"/>
+  <circle cx="146" cy="355" r="3" fill="#1e1b4b"/>
+  <path d="M130 364 Q138 371 146 364" fill="none" stroke="#1e1b4b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M138 312 L176 328 L138 344 L100 328 Z" fill="#1e1b4b"/>
+  <rect x="122" y="334" width="32" height="10" rx="3" fill="#1e1b4b"/>
+  <path d="M170 330 L170 352" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="170" cy="355" r="5" fill="#fbbf24"/>
+
+  <!-- the goal: a map pin with a laptop -->
+  <path d="M362 274 C330 232 306 208 306 172 A56 56 0 0 1 418 172 C418 208 394 232 362 274 Z"
+        fill="#f43f5e"/>
+  <circle cx="362" cy="170" r="38" fill="#ffffff"/>
+  <rect x="340" y="152" width="44" height="30" rx="4" fill="#4f46e5"/>
+  <rect x="345" y="157" width="34" height="20" rx="2" fill="#a5b4fc"/>
+  <path d="M332 186 L392 186 L386 194 L338 194 Z" fill="#4f46e5"/>
   </g>
 </svg>
