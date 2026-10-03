@@ -34,7 +34,7 @@ afterAll(async () => {
 });
 
 describe('seed: base data', () => {
-  it('creates roles, levels, badges, achievements, the course and its 7 worlds', async () => {
+  it('creates roles, levels, badges, achievements, the course and its 12 worlds', async () => {
     expect(await rowCount('roles')).toBe(3);
     expect(await rowCount('levels')).toBe(5);
     expect(await rowCount('badges')).toBe(BADGE_SEEDS.length);
@@ -54,6 +54,11 @@ describe('seed: base data', () => {
       'internet-explorer',
       'ai-playground',
       'english-starter',
+      'it-vocabulary',
+      'coding-basics',
+      'web-design',
+      'networks-hardware',
+      'cyber-security',
     ]);
     expect(worlds.every((w) => w.badgeId !== null && w.status === 'published')).toBe(true);
   });
@@ -74,13 +79,18 @@ describe('seed: lessons follow the learning structure', () => {
 
     for (const lesson of lessons) {
       const steps = await db
-        .select({ step: s.activities.step })
+        .select({ step: s.activities.step, type: s.activities.type })
         .from(s.activities)
         .where(eq(s.activities.lessonId, lesson.id))
         .orderBy(asc(s.activities.position));
       // Every step appears, in this order; play and challenge may repeat (e.g. a mouse game
-      // then questions, or questions then a creative project).
-      const order = steps.map((a) => LESSON_STEPS.indexOf(a.step));
+      // then questions, or questions then a creative project). The "Words to know" round is a
+      // learn step placed right after the example, so it is checked on its own.
+      const vocab = steps.findIndex((a) => a.type === 'vocabulary');
+      expect(steps[vocab - 1]?.step, lesson.slug).toMatch(/see|learn/);
+      const order = steps
+        .filter((a) => a.type !== 'vocabulary')
+        .map((a) => LESSON_STEPS.indexOf(a.step));
       expect(new Set(steps.map((a) => a.step)), lesson.slug).toEqual(new Set(LESSON_STEPS));
       expect(
         order.every((n, i) => i === 0 || n >= order[i - 1]!),
@@ -414,7 +424,7 @@ describe('seed: rewritten lessons reach existing databases', () => {
     expect(report.lessonsUpgraded).toBe(1);
 
     const after = await stepsOf('computer-parts');
-    expect(after.lesson.seedRevision).toBe(3); // revision 3 added the game round
+    expect(after.lesson.seedRevision).toBe(4); // 3 added the game round, 4 the words to know
     expect(after.lesson.title).toMatchObject({ en: 'Parts of a Computer' });
     expect(after.live).toHaveLength(before.live.length);
     expect(after.live.every((a) => !before.live.some((b) => b.id === a.id))).toBe(true);

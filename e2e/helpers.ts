@@ -199,6 +199,17 @@ export async function answerUntil(page: Page, stop: Locator, solve: Solver = nex
   throw new Error('Never reached the expected step');
 }
 
+/** Plays the "Words to know" round after the example: memory cards, then listen and spell. */
+export async function playWordsToKnow(page: Page) {
+  const round = page.getByRole('heading', { level: 1, name: 'Words to know' });
+  await expect(round).toBeVisible();
+  for (let i = 0; i < 4 && (await round.isVisible()); i += 1) {
+    await answerOne(page, nextInSequence);
+    await page.waitForTimeout(300);
+  }
+  await expect(round).toHaveCount(0);
+}
+
 /** Answers every remaining question until the reward screen. */
 export async function finishLesson(page: Page, solve: Solver = nextInSequence) {
   await answerUntil(page, page.getByRole('heading', { name: 'Lesson complete!' }), solve);

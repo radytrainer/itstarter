@@ -318,7 +318,8 @@
       "startOver": "ចាប់ផ្តើមម្តងទៀត",
       "listen": "ស្តាប់",
       "listenSlow": "ស្តាប់យឺតៗ"
-    }
+    },
+    "code": "{language}"
   },
   "status": {
     "title": "ពិនិត្យប្រព័ន្ធ",

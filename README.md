@@ -3,9 +3,11 @@
 A small, friendly, mobile-first e-learning platform that helps new students feel at home with technology
 before formal IT training: **Learn → Play → Practice → Create → Explore**.
 
-> **Project status:** Phases 1–19 are complete; the site is live at **https://itstarter.store**. All **105 lessons** (about 1,950 questions) across 7 worlds are playable — including
-> **English for Beginners** (grammar, vocabulary, listening with a 🔊 button, spelling) — 15 lessons per
-> world, 15–20 questions per lesson (Logic Playground: 20–22), plus a 🎮 **game round** in every lesson
+> **Project status:** Phases 1–19 are complete; the site is live at **https://itstarter.store**. All **180 lessons** (about 3,000 quiz questions) across 12 worlds are playable — Math, Logic,
+> Computer Explorer, Office, Internet, AI, **English for Beginners**, **IT Vocabulary**, **Coding Basics**
+> (Python), **Web Design** (HTML & CSS), **Networks & Hardware** and **Cyber Security Pro** — 15 lessons per
+> world, 15–20 questions per lesson (Logic Playground: 20–22), plus a 📖 **Words to know** round (match IT
+> words to their Khmer meaning, then listen and spell) and a 🎮 **game round** in every lesson
 > (catch the answer, memory cards, robot coding, word builder). Every Check shows the right answer and,
 > for most questions, a short explanation. Lessons include generated maths, keyboard and mouse practice, Office simulations, Safe-or-Dangerous scenes and an AI
 > prompt builder. Badges, achievements, levels and streaks are awarded automatically. Teachers and admins manage students, classes, lessons and badges in the admin area at `/admin`, and follow every student's learning progress at `/admin/progress` (with CSV export), including a

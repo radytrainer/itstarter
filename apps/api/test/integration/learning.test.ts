@@ -81,18 +81,20 @@ describe('GET /api/lessons/:id', () => {
     }
   });
 
-  it('every lesson has the six steps, with a game round before the reward', async () => {
+  it('every lesson has the six steps, with words to know and a game round before the reward', async () => {
     const { cookie } = await newStudent();
     const lesson = await getLesson('better-prompts', cookie);
     expect(lesson.activities.map((a) => a.step)).toEqual([
       'welcome',
       'learn',
       'see',
+      'learn',
       'play',
       'challenge',
       'challenge',
       'reward',
     ]);
+    expect(lesson.activities[3]!.type).toBe('vocabulary');
     expect(lesson.activities.at(-2)!.type).toBe('game');
     expect(lesson.progress).toEqual({
       status: 'not_started',
@@ -236,7 +238,9 @@ describe('answering', () => {
     const id = await lessonId('number-patterns');
     const lesson = await getLesson('number-patterns', student.cookie);
     const scored = lesson.activities.filter((a) => a.isScored);
-    const quizzes = scored.filter((a) => a.type !== 'game');
+    // Games and the "Words to know" round can be replayed; quizzes reveal the answer.
+    const replayable = (a: { type: string }) => a.type === 'game' || a.type === 'vocabulary';
+    const quizzes = scored.filter((a) => !replayable(a));
     expect(quizzes.every((a) => a.config.feedback === 'reveal')).toBe(true);
 
     const [play] = quizzes;
@@ -268,7 +272,7 @@ describe('answering', () => {
       }
     }
     // Games can be replayed: a wrong try is just "try again" (no answer shown yet), then win.
-    for (const activity of scored.filter((a) => a.type === 'game')) {
+    for (const activity of scored.filter(replayable)) {
       expect(activity.config.feedback).toBeUndefined();
       for (const question of activity.questions) {
         const send = async (answer: unknown) =>
@@ -531,7 +535,7 @@ describe('completing a lesson', () => {
     );
     expect(res.statusCode).toBe(409);
     expect(res.json().error.code).toBe('LESSON_INCOMPLETE');
-    expect(res.json().error.details.missingActivityIds).toHaveLength(3); // play, challenge, game
+    expect(res.json().error.details.missingActivityIds).toHaveLength(4); // words to know, play, challenge, game
   });
 
   it('awards lesson XP, the first-lesson achievement, progress and streak — exactly once', async () => {
@@ -543,8 +547,8 @@ describe('completing a lesson', () => {
     expect(first).toMatchObject({
       firstCompletion: true,
       xpAwarded: 50,
-      lessonXpTotal: 90, // 10 (play) + 15 (challenge) + 15 (game) + 50 (lesson)
-      totalXp: 110, // + 20 bonus for the "First Step" achievement
+      lessonXpTotal: 100, // 10 (words) + 10 (play) + 15 (challenge) + 15 (game) + 50 (lesson)
+      totalXp: 120, // + 20 bonus for the "First Step" achievement
       levelUp: false,
       streak: 1,
       worldPercent: 7, // 1 of 15 Math lessons
@@ -564,8 +568,8 @@ describe('completing a lesson', () => {
     expect(replay).toMatchObject({
       firstCompletion: false,
       xpAwarded: 0,
-      totalXp: 110,
-      lessonXpTotal: 90,
+      totalXp: 120,
+      lessonXpTotal: 100,
       newAwards: [],
     });
 
@@ -576,7 +580,7 @@ describe('completing a lesson', () => {
       lessonsCompleted: 1,
       percent: Math.round(100 / ALL_LESSONS.length),
     });
-    expect(after.student).toMatchObject({ xpTotal: 110, streak: 1 });
+    expect(after.student).toMatchObject({ xpTotal: 120, streak: 1 });
     expect(after.continue?.title).toEqual({ en: 'Adding & Subtracting', km: 'ការបូក និងការដក' });
 
     const [row] = await ctx.deps.db
@@ -599,7 +603,7 @@ describe('completing a lesson', () => {
       .select()
       .from(s.studentDailyActivity)
       .where(eq(s.studentDailyActivity.studentId, student.id));
-    expect(daily).toMatchObject({ xpEarned: 110, lessonsCompleted: 1 });
+    expect(daily).toMatchObject({ xpEarned: 120, lessonsCompleted: 1 });
   });
 
   it('scores first tries (a reveal still lets you finish)', async () => {
@@ -658,7 +662,7 @@ describe('completing a lesson', () => {
 });
 
 describe('the whole course (Phase 19 journey, by API)', () => {
-  it('every lesson can be completed, earning every badge', { timeout: 900_000 }, async () => {
+  it('every lesson can be completed, earning every badge', { timeout: 1_500_000 }, async () => {
     const student = await newStudent();
     const awards: string[] = [];
     for (const seed of ALL_LESSONS) {
@@ -692,6 +696,11 @@ describe('the whole course (Phase 19 journey, by API)', () => {
         'web-explorer',
         'cyber-guardian',
         'ai-explorer',
+        'word-master',
+        'code-champion',
+        'web-designer',
+        'network-pro',
+        'cyber-defender',
         'it-starter',
         'first-lesson',
         'five-lessons',

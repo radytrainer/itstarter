@@ -6,10 +6,14 @@ import { ALL_LESSONS } from '../../src/db/seed/data/lessons';
 import type { LessonSeed } from '../../src/db/seed/types';
 
 const inWorld = (slug: string) => ALL_LESSONS.filter((l) => l.worldSlug === slug);
-/** Quiz questions (the game round comes on top). */
+/** Rounds that are games (replayable), not quizzes: the 🎮 game and 📖 "Words to know". */
+const isGameRound = (a: LessonSeed['activities'][number]) =>
+  a.type === 'game' || a.type === 'vocabulary';
+
+/** Quiz questions (the game and vocabulary rounds come on top). */
 const questionCount = (lesson: LessonSeed) =>
   lesson.activities
-    .filter((a) => a.type !== 'game')
+    .filter((a) => !isGameRound(a))
     .reduce((n, a) => n + (a.questions?.length ?? 0), 0);
 
 /** Every world, with the size the school asked for. */
@@ -21,6 +25,11 @@ const WORLDS = [
   ['internet-explorer', { lessons: [15, 15], questions: [15, 20] }],
   ['ai-playground', { lessons: [15, 15], questions: [15, 20] }],
   ['english-starter', { lessons: [15, 20], questions: [15, 20] }],
+  ['it-vocabulary', { lessons: [15, 15], questions: [15, 20] }],
+  ['coding-basics', { lessons: [15, 15], questions: [15, 20] }],
+  ['web-design', { lessons: [15, 15], questions: [15, 20] }],
+  ['networks-hardware', { lessons: [15, 15], questions: [15, 20] }],
+  ['cyber-security', { lessons: [15, 15], questions: [15, 20] }],
 ] as const;
 const ALL_WORLD_LESSONS = () => WORLDS.flatMap(([slug]) => inWorld(slug));
 
@@ -38,7 +47,7 @@ describe('lesson size and answer mode (the size the school asked for)', () => {
 
   it('every question set shows the answer after each Check (games can be replayed)', () => {
     for (const lesson of ALL_WORLD_LESSONS()) {
-      for (const activity of lesson.activities.filter((a) => a.isScored && a.type !== 'game')) {
+      for (const activity of lesson.activities.filter((a) => a.isScored && !isGameRound(a))) {
         expect(feedbackMode(activity.config), `${lesson.slug}/${activity.step}`).toBe('reveal');
       }
     }
@@ -48,7 +57,7 @@ describe('lesson size and answer mode (the size the school asked for)', () => {
     // In the other worlds many questions are self-explanatory once the answer is shown
     // (about a third carry a written explanation); Math and Logic need the working.
     const all = [...inWorld('math-playground'), ...inWorld('logic-playground')].flatMap((l) =>
-      l.activities.flatMap((a) => a.questions ?? []),
+      l.activities.filter((a) => !isGameRound(a)).flatMap((a) => a.questions ?? []),
     );
     const explained = all.filter((q) => q.kind === 'generated' || q.explanation).length;
     expect(explained / all.length).toBeGreaterThan(0.6);
@@ -81,6 +90,27 @@ describe('lesson size and answer mode (the size the school asked for)', () => {
       ).toBe(true);
       const at = lesson.activities.indexOf(round);
       expect(lesson.activities[at + 1]?.step, lesson.slug).toBe('reward');
+    }
+  });
+
+  it('every lesson has one "Words to know" round: Khmer meanings, then listen and spell', () => {
+    for (const lesson of ALL_WORLD_LESSONS()) {
+      const rounds = lesson.activities.filter((a) => a.type === 'vocabulary');
+      expect(rounds.length, lesson.slug).toBe(1);
+      const [cards, spelling] = rounds[0]!.questions!;
+      expect(cards!.kind, lesson.slug).toBe('memory');
+      expect(cards!.options!.length, lesson.slug).toBeGreaterThanOrEqual(6); // 3+ word pairs
+      // Every Khmer card really is Khmer.
+      const khmer = cards!.options!.filter((_, i) => i % 2 === 1);
+      expect(
+        khmer.every((o) => /[\u1780-\u17FF]/.test(o.label.en)),
+        lesson.slug,
+      ).toBe(true);
+      expect(spelling!.kind, lesson.slug).toBe('word_builder');
+      expect(spelling!.publicConfig?.speak, lesson.slug).toBeTruthy();
+      // It comes early, right after the example (before the quizzes).
+      const at = lesson.activities.indexOf(rounds[0]!);
+      expect(lesson.activities[at - 1]?.step, lesson.slug).toMatch(/see|learn/);
     }
   });
 

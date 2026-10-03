@@ -90,7 +90,7 @@ test('admin unpublishes a lesson and students stop seeing it', async ({ page, br
     await csrfPatch(page, `/api/admin/lessons/${lessonId}`, { status: 'published' });
   }
 
-  // The lesson editor shows every step of the lesson (6 steps + the game round on a fresh install).
+  // The lesson editor shows every step of the lesson (6 steps + words to know + the game round on a fresh install).
   const lesson = (await (await page.request.get(`/api/admin/lessons/${lessonId}`)).json()).data as {
     activities: unknown[];
   };
@@ -150,7 +150,7 @@ test('learning progress: a teacher sees, sorts and downloads their class', async
   await expect(page.getByText('Demo Student').filter({ visible: true }).first()).toBeVisible();
   await expect(
     page
-      .getByText(/\d+\/105 lessons/)
+      .getByText(/\d+\/180 lessons/)
       .filter({ visible: true })
       .first(),
   ).toBeVisible();

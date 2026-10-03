@@ -92,6 +92,61 @@ export const WORLD_SEEDS: WorldSeed[] = [
       'ពាក្យ វេយ្យាករណ៍ និងភាសាអង់គ្លេសប្រចាំថ្ងៃ — ជាមួយការស្តាប់ ការប្រកប និងហ្គេម។',
     ),
   },
+  {
+    slug: 'it-vocabulary',
+    icon: '📖',
+    color: 'lime',
+    badgeCode: 'word-master',
+    title: t('IT Vocabulary', 'វាក្យសព្ទ IT'),
+    description: t(
+      'The English words of IT, with Khmer meanings: listen, spell and play.',
+      'ពាក្យអង់គ្លេសនៃ IT ជាមួយអត្ថន័យខ្មែរ៖ ស្តាប់ ប្រកប និងលេង។',
+    ),
+  },
+  {
+    slug: 'coding-basics',
+    icon: '👩‍💻',
+    color: 'orange',
+    badgeCode: 'code-champion',
+    title: t('Coding Basics', 'មូលដ្ឋានសរសេរកូដ'),
+    description: t(
+      'Think like a programmer: steps, variables, if/else, loops, functions and fixing bugs.',
+      'គិតដូចអ្នកសរសេរកម្មវិធី៖ ជំហាន អថេរ if/else រង្វិលជុំ អនុគមន៍ និងការកែកំហុស។',
+    ),
+  },
+  {
+    slug: 'web-design',
+    icon: '🎨',
+    color: 'fuchsia',
+    badgeCode: 'web-designer',
+    title: t('Web Design (HTML & CSS)', 'រចនាវេប (HTML និង CSS)'),
+    description: t(
+      'How web pages are built: HTML tags, links, images, colours and layout.',
+      'របៀបបង្កើតទំព័រវេប៖ ស្លាក HTML តំណ រូបភាព ពណ៌ និងប្លង់។',
+    ),
+  },
+  {
+    slug: 'networks-hardware',
+    icon: '🛠️',
+    color: 'cyan',
+    badgeCode: 'network-pro',
+    title: t('Networks & Hardware', 'បណ្តាញ និងផ្នែករឹង'),
+    description: t(
+      'Inside the computer, how the internet travels, and fixing common problems.',
+      'ខាងក្នុងកុំព្យូទ័រ របៀបដែលអ៊ីនធឺណិតធ្វើដំណើរ និងការដោះស្រាយបញ្ហាទូទៅ។',
+    ),
+  },
+  {
+    slug: 'cyber-security',
+    icon: '🛡️',
+    color: 'slate',
+    badgeCode: 'cyber-defender',
+    title: t('Cyber Security Pro', 'សន្តិសុខអ៊ីនធឺណិតកម្រិតខ្ពស់'),
+    description: t(
+      'Protect accounts and devices: 2-step login, malware, encryption, privacy and careers.',
+      'ការពារគណនី និងឧបករណ៍៖ ការចូល 2 ជំហាន មេរោគ ការអ៊ិនគ្រីប ភាពឯកជន និងអាជីព។',
+    ),
+  },
 ];
 
 /**
@@ -172,6 +227,41 @@ export const BADGE_SEEDS: AwardSeed[] = [
     name: t('English Star', 'តារាភាសាអង់គ្លេស'),
     description: t('Finished every lesson in English for Beginners.'),
     criteria: { type: 'world_completed', worldSlug: 'english-starter' },
+  },
+  {
+    code: 'word-master',
+    icon: '📖',
+    name: t('IT Word Master', 'មេពាក្យ IT'),
+    description: t('Finished every lesson in IT Vocabulary.'),
+    criteria: { type: 'world_completed', worldSlug: 'it-vocabulary' },
+  },
+  {
+    code: 'code-champion',
+    icon: '👩‍💻',
+    name: t('Code Champion', 'ជើងឯកកូដ'),
+    description: t('Finished every lesson in Coding Basics.'),
+    criteria: { type: 'world_completed', worldSlug: 'coding-basics' },
+  },
+  {
+    code: 'web-designer',
+    icon: '🎨',
+    name: t('Web Designer', 'អ្នករចនាវេប'),
+    description: t('Finished every lesson in Web Design.'),
+    criteria: { type: 'world_completed', worldSlug: 'web-design' },
+  },
+  {
+    code: 'network-pro',
+    icon: '🛠️',
+    name: t('Network Pro', 'អ្នកជំនាញបណ្តាញ'),
+    description: t('Finished every lesson in Networks & Hardware.'),
+    criteria: { type: 'world_completed', worldSlug: 'networks-hardware' },
+  },
+  {
+    code: 'cyber-defender',
+    icon: '🛡️',
+    name: t('Cyber Defender', 'អ្នកការពារសន្តិសុខ'),
+    description: t('Finished every lesson in Cyber Security Pro.'),
+    criteria: { type: 'world_completed', worldSlug: 'cyber-security' },
   },
   {
     code: 'it-starter',

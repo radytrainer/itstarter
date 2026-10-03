@@ -93,6 +93,11 @@ describe('GET /api/progress (student dashboard)', () => {
       'internet-explorer',
       'ai-playground',
       'english-starter',
+      'it-vocabulary',
+      'coding-basics',
+      'web-design',
+      'networks-hardware',
+      'cyber-security',
     ]);
 
     expect(d.continue).toMatchObject({ title: { en: 'Parts of a Computer' }, started: true });
@@ -177,10 +182,10 @@ describe('content endpoints', () => {
   it('lets staff browse the course without student data', async () => {
     const { id } = (await get('/api/courses/default', 'teacher')).json().data;
     const course = (await get(`/api/courses/${id}`, 'teacher')).json().data;
-    expect(course.worlds).toHaveLength(7);
-    expect(course.worlds.map((w: { lessonsTotal: number }) => w.lessonsTotal)).toEqual([
-      15, 15, 15, 15, 15, 15, 15,
-    ]);
+    expect(course.worlds).toHaveLength(12);
+    expect(course.worlds.map((w: { lessonsTotal: number }) => w.lessonsTotal)).toEqual(
+      Array(12).fill(15),
+    );
   });
 
   it('returns friendly 404s', async () => {
@@ -192,7 +197,7 @@ describe('content endpoints', () => {
 
   it('GET /api/badges and /api/achievements show earned state', async () => {
     const badges = (await get('/api/badges', 'sokha')).json().data;
-    expect(badges).toHaveLength(11);
+    expect(badges).toHaveLength(16);
     expect(badges.find((b: { code: string }) => b.code === 'math-master').earned).toBe(true);
     const achievements = (await get('/api/achievements', 'sokha')).json().data;
     expect(achievements).toHaveLength(7);

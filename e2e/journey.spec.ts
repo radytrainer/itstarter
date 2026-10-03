@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { expectNoHorizontalScroll, finishLesson, login, setLanguage } from './helpers';
+import {
+  expectNoHorizontalScroll,
+  finishLesson,
+  login,
+  playWordsToKnow,
+  setLanguage,
+} from './helpers';
 
 /**
  * The core student journey from the brief, in a real (mobile-emulated) browser:
@@ -31,11 +37,12 @@ test('student completes "Number Patterns" from the dashboard', async ({ page }) 
   await expectNoHorizontalScroll(page);
   await page.getByRole('link', { name: /Number Patterns/ }).click();
 
-  // Welcome → Learn → See
+  // Welcome → Learn → See → Words to know (match the Khmer meanings, then listen and spell)
   await page.getByRole('button', { name: /Let's go!/ }).click();
   await page.getByRole('button', { name: /^Next/ }).click();
   await expect(page.getByText('3 → 6 → 9 → 12 → 15')).toBeVisible();
   await page.getByRole('button', { name: /^Next/ }).click();
+  await playWordsToKnow(page);
 
   // A wrong answer → the right answer and why, straight away (never "wrong"), then Next
   await expect(page.getByText('Question 1 of 8')).toBeVisible();
@@ -60,7 +67,7 @@ test('student completes "Number Patterns" from the dashboard', async ({ page }) 
 
   // Reward
   await expect(page.getByRole('heading', { name: 'Lesson complete!' })).toBeVisible();
-  await expect(page.getByText(/\+90 XP|already finished this lesson/)).toBeVisible();
+  await expect(page.getByText(/\+100 XP|already finished this lesson/)).toBeVisible();
   await expect(page.getByRole('link', { name: /Next lesson/ })).toBeVisible();
 
   // Back home: progress and XP updated
@@ -76,7 +83,7 @@ test('student completes "Number Patterns" from the dashboard', async ({ page }) 
       .textContent())!.replace(/\D/g, ''),
   );
   expect(xpAfter).toBeGreaterThanOrEqual(Math.max(xpBefore, 75));
-  await expect(page.getByText(/\d+ of 105 lessons/)).toBeVisible();
+  await expect(page.getByText(/\d+ of 180 lessons/)).toBeVisible();
 });
 
 test('the lesson player works in Khmer', async ({ page }) => {

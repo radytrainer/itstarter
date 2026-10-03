@@ -5,7 +5,7 @@ import { SheetGrid } from './sheet-grid';
 
 /**
  * Realistic "scenes" shown above a question from its PUBLIC data: an email, a web address,
- * a search box, an AI chat or a spreadsheet. They are pictures to look at, never real links.
+ * a search box, an AI chat, a spreadsheet or a piece of code. They are pictures to look at, never real links.
  */
 interface Mock {
   type: 'email' | 'url' | 'search' | 'chat';
@@ -23,6 +23,8 @@ export function QuestionScene({ data, kind }: { data: Record<string, unknown>; k
   const t = useTranslations('lesson');
   const mock = data.mock as Mock | undefined;
   const grid = data.grid as { rows: (string | number)[][] } | undefined;
+  const code = typeof data.code === 'string' ? data.code : undefined;
+  const codeLanguage = typeof data.codeLang === 'string' ? data.codeLang : undefined;
 
   return (
     <>
@@ -85,6 +87,19 @@ export function QuestionScene({ data, kind }: { data: Record<string, unknown>; k
             </li>
           ))}
         </ol>
+      )}
+
+      {/* Code to read (never run): HTML, CSS, JavaScript, Python or pseudo-code. */}
+      {code && (
+        <figure className="overflow-hidden rounded-card border border-slate-700 bg-slate-900 shadow-card">
+          <figcaption className="flex items-center gap-1.5 border-b border-slate-700 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-300 uppercase">
+            <span aria-hidden="true">{'</>'}</span>
+            {t('code', { language: codeLanguage ?? 'code' })}
+          </figcaption>
+          <pre className="overflow-x-auto p-3 text-sm leading-relaxed text-slate-100 sm:text-base">
+            <code lang="en">{code}</code>
+          </pre>
+        </figure>
       )}
 
       {/* A cell-select question draws its own interactive sheet. */}

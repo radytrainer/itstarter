@@ -462,6 +462,101 @@ export const typeIt = (
   ...extras(q),
 });
 
+// ---------- Words to know (vocabulary) ----------
+
+/** An IT word: English, Khmer meaning, optional emoji picture. */
+export type Word = [en: string, km: string, emoji?: string];
+
+/**
+ * 📖 Words to know: match each IT word to its Khmer meaning (memory cards), then listen and
+ * spell one of them. Spelling uses the first one-word term unless `spellWord` is given.
+ */
+export const vocab = (words: Word[], spellWord?: string): ActivitySeed => {
+  const word = spellWord ?? words.map(([en]) => en).find((en) => /^[A-Za-z]{3,12}$/.test(en));
+  if (!word) throw new Error(`No one-word term to spell in: ${words.map((w) => w[0]).join(', ')}`);
+  return {
+    step: 'learn',
+    type: 'vocabulary',
+    title: t('Words to know', 'ពាក្យត្រូវដឹង'),
+    isScored: true,
+    passScore: 50,
+    xpReward: 10,
+    questions: [
+      memory(
+        t(
+          'Match each IT word to its Khmer meaning.',
+          'ផ្គូផ្គងពាក្យ IT នីមួយៗជាមួយអត្ថន័យជាភាសាខ្មែរ។',
+        ),
+        words.map(([en, km, emoji]) => [emoji ? [emoji, t(en)] : t(en), same(km)]),
+      ),
+      spell(t('Listen 🔊 and spell the IT word.', 'ស្តាប់ 🔊 ហើយប្រកបពាក្យ IT។'), word, {
+        say: word,
+        extra: 'eo',
+      }),
+    ],
+  };
+};
+
+/** Adds each lesson's "Words to know" round (by lesson slug) right after its example step. */
+export const withVocab =
+  (lists: Record<string, Word[]>) =>
+  (seed: LessonSeed): LessonSeed => {
+    const words = lists[seed.slug];
+    if (!words) return seed;
+    const see = seed.activities.findIndex((a) => a.step === 'see');
+    const learn = seed.activities.findIndex((a) => a.step === 'learn');
+    const at = (see !== -1 ? see : learn) + 1;
+    const activities = [...seed.activities];
+    activities.splice(at, 0, vocab(words));
+    return { ...seed, activities };
+  };
+
+/** Everything a standard lesson needs; `plannedLesson` puts it in the usual order. */
+export interface LessonPlan {
+  intro: [emoji: string, message: Text];
+  learn: [emoji: string, title: Text, body: Text, say?: string][];
+  see: [example: Text, explanation: Text];
+  words: Word[];
+  play: QuestionSeed[];
+  challenge: QuestionSeed[];
+  games: QuestionSeed[];
+  reward: Text;
+  minutes?: number;
+}
+
+/**
+ * welcome → learn → see → 📖 words → play → challenge → 🎮 game → reward.
+ * Quiz steps show the answer after each Check; games can be replayed.
+ */
+export function plannedLesson(
+  worldSlug: string,
+  slug: string,
+  icon: string,
+  title: LocalizedText,
+  summary: Text,
+  plan: LessonPlan,
+): LessonSeed {
+  return lesson(worldSlug, slug, icon, title, summary, plan.minutes ?? 12, [
+    intro(...plan.intro),
+    learn(...plan.learn),
+    see(...plan.see),
+    vocab(plan.words),
+    revealPlay('multiple_choice', ...plan.play),
+    revealChallenge('multiple_choice', ...plan.challenge),
+    game(...plan.games),
+    reward(plan.reward),
+  ]);
+}
+
+/** A piece of code shown with the question (never run). */
+export const code = (
+  source: string,
+  language: 'HTML' | 'CSS' | 'JavaScript' | 'Python' | 'Code' = 'Code',
+) => ({
+  code: source,
+  codeLang: language,
+});
+
 /** Adds each lesson's game round (by lesson slug) just before its reward step. */
 export const withGames =
   (games: Record<string, ActivitySeed>) =>

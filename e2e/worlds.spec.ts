@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { answerUntil, expectNoHorizontalScroll, finishLesson, login, setLanguage } from './helpers';
+import {
+  answerUntil,
+  expectNoHorizontalScroll,
+  finishLesson,
+  login,
+  playWordsToKnow,
+  setLanguage,
+} from './helpers';
 
 // One lesson from each new kind of activity (Phases 7–11), played in a real mobile browser.
 
@@ -9,11 +16,12 @@ async function openLesson(page: Page, world: RegExp, lesson: RegExp) {
   await page.getByRole('link', { name: lesson }).click();
 }
 
-/** Clicks through the welcome/learn/see steps. */
+/** Clicks through the welcome/learn/see steps and plays the "Words to know" round. */
 async function passIntroSteps(page: Page) {
   await page.getByRole('button', { name: /Let's go!/ }).click();
   await page.getByRole('button', { name: /^Next/ }).click();
   await page.getByRole('button', { name: /^Next/ }).click();
+  await playWordsToKnow(page);
 }
 
 /** Solves "a + b = ?", "a − b = ?", "a × b = ?" or "a ÷ b = ?" from the screen. */

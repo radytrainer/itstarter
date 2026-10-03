@@ -95,7 +95,7 @@ describe('the numbers', () => {
     const math = data.worlds.find((w) => w.slug === 'math-playground')!;
     const computer = data.worlds.find((w) => w.slug === 'computer-explorer')!;
     const total = data.worlds.reduce((n, w) => n + w.lessonsTotal, 0);
-    expect(data.worlds.map((w) => w.lessonsTotal)).toEqual([15, 15, 15, 15, 15, 15, 15]);
+    expect(data.worlds.map((w) => w.lessonsTotal)).toEqual(Array(12).fill(15));
 
     const [a1, a2, a3] = data.rows;
     expect(a1).toMatchObject({

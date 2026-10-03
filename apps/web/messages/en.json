@@ -318,7 +318,8 @@
       "startOver": "Start over",
       "listen": "Listen",
       "listenSlow": "Listen slowly"
-    }
+    },
+    "code": "{language}"
   },
   "status": {
     "title": "System check",

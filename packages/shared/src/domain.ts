@@ -44,6 +44,8 @@ export const ACTIVITY_TYPES = [
   'math_generator',
   /** Moving games: catch, memory cards, robot path, word builder. */
   'game',
+  /** "Words to know": the lesson's key IT words (English ↔ Khmer, listen, spell). */
+  'vocabulary',
   // simulations
   'mouse_trainer',
   'keyboard_challenge',

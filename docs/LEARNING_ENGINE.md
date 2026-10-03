@@ -63,6 +63,16 @@ matching pairs, ordering 1..n with no gaps, items that belong to real groups, on
 part, cells inside their sheet, real generator names, and no answers in any public data. They also check
 that **every badge can be earned** with the content that exists.
 
+## Words to know 📖
+
+Every lesson has a **"Words to know"** round right after the example (activity type `vocabulary`,
+step `learn`, +10 XP): memory cards that match 3–4 IT words to their Khmer meaning, then the student
+listens 🔊 and spells one of the words with letter tiles. It uses the same "try again" mode as games.
+The word lists live next to the lessons (`lessons/vocab-1.ts`, `vocab-2.ts`, and inside each lesson
+plan of the newer worlds); `vocab()` in `dsl.ts` builds the round. The **IT Vocabulary** world goes
+further: 15 themed lessons (hardware, email, security, error messages, IT jobs, asking for help…) whose
+quizzes are built from word data — Khmer meaning, what the word does, and the word in a sentence.
+
 ## Games 🎮
 
 Every lesson has a **game round** just before the reward (activity type `game`, step `challenge`,

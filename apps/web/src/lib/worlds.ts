@@ -50,6 +50,36 @@ export const WORLD_STYLES: Record<string, WorldStyle> = {
     bar: 'bg-rose-500',
     text: 'text-rose-800',
   },
+  orange: {
+    card: 'bg-orange-50 border-orange-200',
+    icon: 'bg-orange-100',
+    bar: 'bg-orange-500',
+    text: 'text-orange-800',
+  },
+  fuchsia: {
+    card: 'bg-fuchsia-50 border-fuchsia-200',
+    icon: 'bg-fuchsia-100',
+    bar: 'bg-fuchsia-500',
+    text: 'text-fuchsia-800',
+  },
+  cyan: {
+    card: 'bg-cyan-50 border-cyan-200',
+    icon: 'bg-cyan-100',
+    bar: 'bg-cyan-600',
+    text: 'text-cyan-800',
+  },
+  slate: {
+    card: 'bg-slate-100 border-slate-300',
+    icon: 'bg-slate-200',
+    bar: 'bg-slate-600',
+    text: 'text-slate-800',
+  },
+  lime: {
+    card: 'bg-lime-50 border-lime-200',
+    icon: 'bg-lime-100',
+    bar: 'bg-lime-600',
+    text: 'text-lime-800',
+  },
   teal: {
     card: 'bg-teal-50 border-teal-200',
     icon: 'bg-teal-100',
