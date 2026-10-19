@@ -16,6 +16,7 @@ import { AnalyticsService } from './modules/analytics/service';
 import { authRoutes } from './modules/auth/routes';
 import { contentRoutes } from './modules/content/routes';
 import { ContentService } from './modules/content/service';
+import { RankingService } from './modules/gamification/ranking';
 import { notificationRoutes } from './modules/gamification/routes';
 import { learningRoutes } from './modules/learning/routes';
 import { LearningService } from './modules/learning/service';
@@ -107,6 +108,7 @@ export async function buildApp(config: AppConfig, deps: AppDeps): Promise<Fastif
   const people = new PeopleService(deps.db, sessions);
   const progressReport = new ProgressReportService(deps.db);
   const performance = new PerformanceService(deps.db);
+  const ranking = new RankingService(deps.db);
   const adminContent = new AdminContentService(deps.db, cache);
   const analytics = new AnalyticsService(deps.db, cache);
   const learning = new LearningService(deps.db, deps.redis, cache, content, app.log);
@@ -118,7 +120,13 @@ export async function buildApp(config: AppConfig, deps: AppDeps): Promise<Fastif
 
   await app.register(healthRoutes, { prefix: '/api', deps, version: config.APP_VERSION });
   await app.register(authRoutes, { prefix: '/api', auth, registration, cookie });
-  await app.register(contentRoutes, { prefix: '/api', content, progress, performance });
+  await app.register(contentRoutes, {
+    prefix: '/api',
+    content,
+    progress,
+    performance,
+    ranking,
+  });
   await app.register(learningRoutes, { prefix: '/api', learning });
   await app.register(notificationRoutes, { prefix: '/api', db: deps.db });
   await app.register(teacherRoutes, {

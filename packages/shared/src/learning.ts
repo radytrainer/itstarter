@@ -95,3 +95,26 @@ export interface Dashboard {
   continue: ContinueLesson | null;
   badges: AwardView[];
 }
+
+/** 🏆 Ranking: students ordered by XP (all time, or earned in the last 7 days). */
+export const RANKING_PERIODS = ['all', 'week'] as const;
+export type RankingPeriod = (typeof RANKING_PERIODS)[number];
+
+export interface RankingEntry {
+  /** Same XP = same rank (1, 2, 2, 4…). Null while the student has no XP in this period. */
+  rank: number | null;
+  displayName: string;
+  xp: number;
+  levelIcon: string;
+  isYou: boolean;
+}
+
+export interface RankingView {
+  period: RankingPeriod;
+  /** The top students (ties ordered by name). */
+  top: RankingEntry[];
+  /** The signed-in student's own place; null for staff. */
+  you: RankingEntry | null;
+  /** Students with XP in this period. */
+  ranked: number;
+}

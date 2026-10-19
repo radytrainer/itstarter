@@ -1,32 +1,37 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { RANKING_PERIODS } from '@itstarter/shared';
 import type {
   ApiSuccess,
   AwardView,
   CourseDetail,
   CourseSummary,
   Dashboard,
+  RankingView,
   StudentPerformance,
   WorldDetail,
 } from '@itstarter/shared';
 import { AppError } from '../../lib/errors';
 import { parseWith } from '../../lib/validation';
 import { currentUser, requireAuth, requireRole } from '../../plugins/auth';
+import type { RankingService } from '../gamification/ranking';
 import type { PerformanceService } from '../performance/service';
 import type { ProgressService } from '../progress/service';
 import type { ContentService } from './service';
 
 const idParams = z.object({ id: z.uuid() });
+const rankingQuery = z.object({ period: z.enum(RANKING_PERIODS).default('all') });
 
 interface Options {
   content: ContentService;
   progress: ProgressService;
   performance: PerformanceService;
+  ranking: RankingService;
 }
 
 export const contentRoutes: FastifyPluginAsync<Options> = async (
   app,
-  { content, progress, performance },
+  { content, progress, performance, ranking },
 ) => {
   app.get(
     '/courses',
@@ -90,6 +95,16 @@ export const contentRoutes: FastifyPluginAsync<Options> = async (
       success: true,
       data: await progress.badges(currentUser(request)),
     }),
+  );
+
+  /** 🏆 Everyone signed in sees the top students by XP; students also see their own place. */
+  app.get(
+    '/ranking',
+    { preHandler: requireAuth() },
+    async (request): Promise<ApiSuccess<RankingView>> => {
+      const { period } = parseWith(rankingQuery, request.query);
+      return { success: true, data: await ranking.ranking(currentUser(request), period) };
+    },
   );
 
   app.get(

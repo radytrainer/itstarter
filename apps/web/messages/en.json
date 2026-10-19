@@ -29,7 +29,8 @@
     "badges": "Badges",
     "profile": "Profile",
     "admin": "Admin",
-    "progress": "My progress"
+    "progress": "My progress",
+    "ranking": "Ranking"
   },
   "roles": {
     "STUDENT": "Student",
@@ -695,5 +696,29 @@
     "strengths": "You are great at",
     "practise": "Practise a little more",
     "nothingYet": "Answer some questions and your strengths will appear here."
+  },
+  "ranking": {
+    "title": "Ranking",
+    "intro": "Earn XP in lessons and climb to the top!",
+    "periodLabel": "Show ranking for",
+    "periods": {
+      "all": "All time",
+      "week": "This week"
+    },
+    "yourPlace": "Your place",
+    "youAre": "You are #{rank} of {total}",
+    "notYet": {
+      "all": "Finish a lesson to join the ranking!",
+      "week": "Earn XP this week to join the ranking!"
+    },
+    "keepGoing": "Every lesson brings you closer to the top. 🚀",
+    "top": "Top {count}",
+    "place": "Place {rank}",
+    "you": "you",
+    "xp": "{xp} XP",
+    "empty": {
+      "all": "No one has earned XP yet — be the first!",
+      "week": "No one has earned XP this week yet — be the first!"
+    }
   }
 }

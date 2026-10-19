@@ -8,6 +8,7 @@ const ITEMS = [
   { href: '/', key: 'home', icon: '🏠' },
   { href: '/progress', key: 'progress', icon: '📈' },
   { href: '/badges', key: 'badges', icon: '🏅' },
+  { href: '/ranking', key: 'ranking', icon: '🏆' },
   { href: '/profile', key: 'profile', icon: '🙂' },
 ] as const;
 
@@ -34,7 +35,7 @@ export function NavLinks({ variant }: { variant: 'bottom' | 'top' }) {
             className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 font-bold text-muted hover:bg-slate-100 aria-[current=page]:bg-brand-50 aria-[current=page]:text-brand-700 lg:px-4"
           >
             <span aria-hidden="true">{item.icon}</span>
-            {/* Tablets: icons only (4 items + language + account must fit); names from 1024px. */}
+            {/* Tablets: icons only (5 items + language + account must fit); names from 1024px. */}
             <span className="sr-only lg:not-sr-only">{t(item.key)}</span>
           </Link>
         ))}
@@ -47,7 +48,7 @@ export function NavLinks({ variant }: { variant: 'bottom' | 'top' }) {
       aria-label={t('label')}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-lg grid-cols-5">
         {ITEMS.map((item) => (
           <li key={item.href}>
             <Link

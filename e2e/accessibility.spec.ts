@@ -38,7 +38,7 @@ for (const locale of ['en', 'km'] as const) {
     await page.goto('/register');
     await expectAccessible(page, 'register');
     await login(page);
-    for (const path of ['/', '/progress', '/badges', '/profile', '/offline']) {
+    for (const path of ['/', '/progress', '/badges', '/ranking', '/profile', '/offline']) {
       await page.goto(path);
       await expectAccessible(page, path);
     }

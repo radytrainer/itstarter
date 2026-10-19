@@ -191,20 +191,21 @@ Unknown kinds don't crash the player: students see "coming soon" and can skip.
 
 ## API
 
-| Endpoint                                    | Who       | Purpose                                              |
-| ------------------------------------------- | --------- | ---------------------------------------------------- |
-| `GET /api/lessons/:id`                      | signed in | lesson for playing (no answers) + own progress       |
-| `GET /api/activities/:id`                   | signed in | one activity (no answers)                            |
-| `POST /api/lessons/:id/start`               | student   | mark started / count a replay                        |
-| `POST /api/activities/:id/answer`           | student   | check an answer                                      |
-| `POST /api/activities/:id/complete`         | student   | finish an unscored (content) step                    |
-| `POST /api/lessons/:id/time`                | student   | active seconds (1–600) while a lesson is open        |
-| `POST /api/lessons/:id/complete`            | student   | finish the lesson → XP, level, streak, progress      |
-| `GET /api/progress/performance`             | student   | own performance & learning habit                     |
-| `GET /api/teacher/students/:id/performance` | staff     | one student's performance & commitment (class scope) |
-| `GET /api/progress`                         | student   | dashboard                                            |
-| `GET /api/worlds/:id`                       | signed in | world with lessons (+ own status for students)       |
-| `GET /api/badges`, `/achievements`          | signed in | all badges/achievements with earned state            |
+| Endpoint                                    | Who       | Purpose                                               |
+| ------------------------------------------- | --------- | ----------------------------------------------------- |
+| `GET /api/lessons/:id`                      | signed in | lesson for playing (no answers) + own progress        |
+| `GET /api/activities/:id`                   | signed in | one activity (no answers)                             |
+| `POST /api/lessons/:id/start`               | student   | mark started / count a replay                         |
+| `POST /api/activities/:id/answer`           | student   | check an answer                                       |
+| `POST /api/activities/:id/complete`         | student   | finish an unscored (content) step                     |
+| `POST /api/lessons/:id/time`                | student   | active seconds (1–600) while a lesson is open         |
+| `POST /api/lessons/:id/complete`            | student   | finish the lesson → XP, level, streak, progress       |
+| `GET /api/progress/performance`             | student   | own performance & learning habit                      |
+| `GET /api/teacher/students/:id/performance` | staff     | one student's performance & commitment (class scope)  |
+| `GET /api/progress`                         | student   | dashboard                                             |
+| `GET /api/worlds/:id`                       | signed in | world with lessons (+ own status for students)        |
+| `GET /api/badges`, `/achievements`          | signed in | all badges/achievements with earned state             |
+| `GET /api/ranking?period=all` or `week`     | signed in | top 20 students by XP (ties share a rank) + own place |
 
 Staff can open any lesson in **preview mode** (no answers are sent or recorded).
 
