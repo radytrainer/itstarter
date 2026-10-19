@@ -24,7 +24,7 @@ function Place({ rank }: { rank: number | null }) {
       className="w-10 shrink-0 text-center text-lg font-extrabold text-muted tabular-nums"
       aria-hidden="true"
     >
-      {rank === null ? '–' : `#${rank}`}
+      {rank === null ? '🌱' : `#${rank}`}
     </span>
   );
 }
@@ -41,7 +41,7 @@ async function Row({ entry, anchor = false }: { entry: RankingEntry; anchor?: bo
       }`}
     >
       <Place rank={entry.rank} />
-      <span className="sr-only">{t('place', { rank: entry.rank ?? 0 })}</span>
+      {entry.rank !== null && <span className="sr-only">{t('place', { rank: entry.rank })}</span>}
       <span aria-hidden="true" className="text-xl">
         {entry.levelIcon}
       </span>
@@ -49,9 +49,13 @@ async function Row({ entry, anchor = false }: { entry: RankingEntry; anchor?: bo
         {entry.displayName}
         {entry.isYou && <span className="ml-2 text-sm text-brand-700">({t('you')})</span>}
       </span>
-      <span className="shrink-0 font-extrabold text-amber-700 tabular-nums">
-        {t('xp', { xp: entry.xp })}
-      </span>
+      {entry.rank === null ? (
+        <span className="shrink-0 text-sm font-bold text-muted">{t('notStarted')}</span>
+      ) : (
+        <span className="shrink-0 font-extrabold text-amber-700 tabular-nums">
+          {t('xp', { xp: entry.xp })}
+        </span>
+      )}
     </li>
   );
 }
@@ -129,7 +133,7 @@ export default async function RankingPage({
             <h2 className="text-lg font-extrabold">{t('yourPlace')}</h2>
             {you.rank !== null ? (
               <p className="text-2xl font-extrabold">
-                {t('youAre', { rank: you.rank, total: view.ranked })} ·{' '}
+                {t('youAre', { rank: you.rank, total: view.total })} ·{' '}
                 <span className="text-amber-700">{t('xp', { xp: you.xp })}</span>
               </p>
             ) : (
@@ -167,7 +171,7 @@ export default async function RankingPage({
       <Card as="section" aria-labelledby="all-title" className="flex flex-col gap-3">
         <h2 id="all-title" className="text-xl font-extrabold">
           {view.entries.length > 0
-            ? t('showing', { first, last, total: view.ranked })
+            ? t('showing', { first, last, total: view.total })
             : t('allStudents')}
         </h2>
         {view.entries.length === 0 ? (

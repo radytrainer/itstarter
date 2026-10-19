@@ -80,7 +80,7 @@ export function rankingCsv(rows: RankingExportRow[], info: ExportInfo): string {
     L.lastActive,
   ];
   const lines = rows.map((r) => [
-    r.rank,
+    r.rank ?? '',
     r.displayName,
     r.username,
     r.cohort ?? '',
@@ -136,7 +136,12 @@ export function rankingPdf(rows: RankingExportRow[], info: ExportInfo): Promise<
   doc.registerFont('bold', bold);
 
   const columns: Column[] = [
-    { label: L.rank, width: 42, align: 'center', value: (r) => String(r.rank) },
+    {
+      label: L.rank,
+      width: 42,
+      align: 'center',
+      value: (r) => (r.rank === null ? '-' : String(r.rank)),
+    },
     { label: L.name, width: 150, align: 'left', value: (r) => r.displayName },
     { label: L.username, width: 100, align: 'left', value: (r) => r.username },
     { label: L.cohort, width: 88, align: 'left', value: (r) => r.cohort ?? L.noClass },
@@ -218,12 +223,12 @@ export function rankingPdf(rows: RankingExportRow[], info: ExportInfo): Promise<
       y = tableHeader(PAGE.margin);
     }
     if (i % 2 === 1) doc.rect(left, y, tableWidth, rowHeight).fill(COLORS.zebra);
-    const top3 = r.rank <= 3 && r.xp > 0;
+    const top3 = r.rank !== null && r.rank <= 3;
     if (top3) {
       // A small medal disc behind the rank number: gold, silver, bronze.
       doc
         .circle(left + columns[0]!.width / 2, y + rowHeight / 2, 8)
-        .fill(COLORS.medal[r.rank - 1]!);
+        .fill(COLORS.medal[r.rank! - 1]!);
     }
     let x = left;
     columns.forEach((col, c) => {

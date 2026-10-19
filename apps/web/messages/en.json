@@ -744,6 +744,7 @@
     "next": "Next",
     "pageOf": "Page {page} of {pages}",
     "export": "Export (PDF / Excel)",
-    "staffNote": "Staff accounts are not ranked — this list shows the students."
+    "staffNote": "Staff accounts are not ranked — this list shows the students.",
+    "notStarted": "Not started yet"
   }
 }

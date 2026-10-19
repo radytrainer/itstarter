@@ -122,6 +122,8 @@ export interface RankingView {
   yourPage: number | null;
   /** The students just above and below you (you included), to compare. */
   around: RankingEntry[];
-  /** Students with XP in this period. */
+  /** Students with XP in this period (they have a rank). */
   ranked: number;
+  /** Every active student listed (the ones without XP come last, without a rank). */
+  total: number;
 }

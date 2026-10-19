@@ -81,14 +81,27 @@ describe('GET /api/ranking', () => {
     ]);
   });
 
-  it('leaves out disabled accounts, and shows no rank yet for a student without XP', async () => {
+  it('lists every active student: without XP last and without a rank; disabled left out', async () => {
     const view = await ranking('rank.zero');
-    const names = view.entries.map((e) => e.displayName);
-    expect(names).not.toContain('rank hidden');
-    expect(names).not.toContain('rank zero');
     expect(view.you).toMatchObject({ rank: null, xp: 0, displayName: 'rank zero' });
-    expect(view.yourPage).toBeNull();
     expect(view.around).toEqual([]);
+    expect(view.total).toBeGreaterThan(view.ranked); // the students without XP are counted too
+
+    // Every page together: each active student exactly once, ranked ones first.
+    const all = [];
+    for (let page = 1; page <= view.pages; page += 1) {
+      all.push(...(await ranking('rank.zero', `?page=${page}`)).entries);
+    }
+    expect(all).toHaveLength(view.total);
+    const names = all.map((e) => e.displayName);
+    expect(names).toContain('rank zero');
+    expect(names).not.toContain('rank hidden');
+    const firstUnranked = all.findIndex((e) => e.rank === null);
+    expect(firstUnranked).toBe(view.ranked);
+    expect(all.slice(firstUnranked).every((e) => e.rank === null && e.xp === 0)).toBe(true);
+    // "Find me" goes to the page with your row.
+    const yours = await ranking('rank.zero', `?page=${view.yourPage}`);
+    expect(yours.entries.some((e) => e.isYou)).toBe(true);
   });
 
   it('“this week” counts only XP earned in the last 7 days', async () => {
@@ -161,7 +174,7 @@ describe('GET /api/teacher/ranking/export', () => {
     expect(lines[0]).toBe('Rank,Name,Username,Class,XP,Total XP,Level,Lessons,Last active');
     expect(lines[1]).toMatch(/^1,rank crowd01,rank\.crowd01,,/);
     // Everyone is in the file, also students without XP (they share the last rank).
-    expect(csv.body).toContain('rank.zero');
+    expect(lines.find((l) => l.includes('rank.zero'))).toMatch(/^,rank zero,rank.zero,/); // no rank yet
     expect(csv.body).not.toContain('rank.hidden');
 
     // Exactly what the admin form sends for “All classes”.
