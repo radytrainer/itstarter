@@ -132,4 +132,21 @@ describe('GET /api/ranking', () => {
     });
     expect(bad.statusCode).toBe(400);
   });
+
+  // Runs last: it fills the top with 25 more students.
+  it('outside the top 20, a student sees the students just above and below them', async () => {
+    for (let i = 1; i <= 25; i += 1) {
+      await student(`rank.crowd${String(i).padStart(2, '0')}`, BIG * 3 + (26 - i) * 10);
+    }
+    await student('rank.me', BIG * 3 - 5); // 26th
+    const view = await ranking('rank.me');
+    expect(view.top).toHaveLength(RANKING_SIZE);
+    expect(view.top.some((e) => e.isYou)).toBe(false);
+    expect(view.you).toMatchObject({ rank: 26, isYou: true });
+    expect(view.around.map((e) => e.rank)).toEqual([24, 25, 26, 27, 28]);
+    expect(view.around[2]).toMatchObject({ displayName: 'rank me', isYou: true });
+    expect(view.around[1]).toMatchObject({ displayName: 'rank crowd25', xp: BIG * 3 + 10 });
+    // Inside the top there is no separate list.
+    expect((await ranking('rank.crowd01')).around).toEqual([]);
+  });
 });

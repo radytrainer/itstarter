@@ -115,6 +115,8 @@ export interface RankingView {
   top: RankingEntry[];
   /** The signed-in student's own place; null for staff. */
   you: RankingEntry | null;
+  /** Outside the top: the students just above and below you (you included), to compare. */
+  around: RankingEntry[];
   /** Students with XP in this period. */
   ranked: number;
 }

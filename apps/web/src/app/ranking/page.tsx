@@ -67,7 +67,11 @@ export default async function RankingPage({
     getTranslations('ranking'),
   ]);
   const you = view.you;
-  const youInTop = view.top.some((e) => e.isYou);
+  // The nearest student ahead of you: how much XP you need to reach their place.
+  const ahead =
+    you && you.rank !== null
+      ? [...view.top, ...view.around].filter((e) => e.xp > you.xp).sort((a, b) => a.xp - b.xp)[0]
+      : undefined;
 
   return (
     <AppShell signedIn>
@@ -104,8 +108,27 @@ export default async function RankingPage({
             ) : (
               <p className="text-lg">{t(`notYet.${period}`)}</p>
             )}
-            <p className="text-sm text-muted">{t('keepGoing')}</p>
+            <p className="text-sm text-muted">
+              {you.rank === 1
+                ? t('first')
+                : ahead && ahead.rank !== null
+                  ? t('toMoveUp', { xp: ahead.xp - you.xp, rank: ahead.rank })
+                  : t('keepGoing')}
+            </p>
           </div>
+        </Card>
+      )}
+
+      {view.around.length > 0 && (
+        <Card as="section" aria-labelledby="near-title" className="flex flex-col gap-3">
+          <h2 id="near-title" className="text-xl font-extrabold">
+            {t('nearYou')}
+          </h2>
+          <ol className="flex flex-col gap-1">
+            {view.around.map((entry, i) => (
+              <Row key={`${entry.rank}-${i}`} entry={entry} />
+            ))}
+          </ol>
         </Card>
       )}
 
@@ -121,16 +144,6 @@ export default async function RankingPage({
               <Row key={`${entry.rank}-${i}`} entry={entry} />
             ))}
           </ol>
-        )}
-        {you && you.rank !== null && !youInTop && (
-          <>
-            <p aria-hidden="true" className="text-center text-muted">
-              ⋮
-            </p>
-            <ol>
-              <Row entry={you} />
-            </ol>
-          </>
         )}
       </Card>
     </AppShell>

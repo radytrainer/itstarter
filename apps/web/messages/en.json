@@ -719,6 +719,9 @@
     "empty": {
       "all": "No one has earned XP yet — be the first!",
       "week": "No one has earned XP this week yet — be the first!"
-    }
+    },
+    "nearYou": "Students near you",
+    "toMoveUp": "Earn {xp} more XP to reach #{rank}! 🚀",
+    "first": "You are number 1 — amazing! 🎉"
   }
 }
