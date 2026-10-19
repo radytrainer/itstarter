@@ -111,11 +111,16 @@ export interface RankingEntry {
 
 export interface RankingView {
   period: RankingPeriod;
-  /** The top students (ties ordered by name). */
-  top: RankingEntry[];
+  /** Everyone is listed, 50 per page (ties ordered by name). */
+  page: number;
+  pages: number;
+  pageSize: number;
+  entries: RankingEntry[];
   /** The signed-in student's own place; null for staff. */
   you: RankingEntry | null;
-  /** Outside the top: the students just above and below you (you included), to compare. */
+  /** The page your own row is on (null without a place). */
+  yourPage: number | null;
+  /** The students just above and below you (you included), to compare. */
   around: RankingEntry[];
   /** Students with XP in this period. */
   ranked: number;

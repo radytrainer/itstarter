@@ -93,6 +93,7 @@ test('staff pages', async ({ page }) => {
     student!,
     '/admin/progress',
     '/admin/analytics',
+    '/admin/ranking',
     '/admin/content',
     '/admin/badges',
     '/admin/staff',

@@ -10,11 +10,25 @@ import {
 import { parseWith } from '../../lib/validation';
 import { currentUser, requireRole } from '../../plugins/auth';
 import type { PeopleService } from '../admin/people-service';
+import { RANKING_PERIODS } from '@itstarter/shared';
+import { AppError } from '../../lib/errors';
+import { rankingCsv, rankingPdf } from '../gamification/ranking-export';
+import type { RankingService } from '../gamification/ranking';
 import type { PerformanceService } from '../performance/service';
 import type { ProgressReportService } from './progress-report';
 import type { StudentDetail, StudentSummary, TeacherService } from './service';
 
 const studentParamsSchema = z.object({ id: z.uuid() });
+const rankingExportSchema = z.object({
+  format: z.enum(['pdf', 'csv']).default('pdf'),
+  period: z.enum(RANKING_PERIODS).default('all'),
+  // The export form sends an empty value for "All classes".
+  cohortId: z
+    .union([z.uuid(), z.literal('')])
+    .optional()
+    .transform((v) => v || undefined),
+  lang: z.enum(['en', 'km']).default('en'),
+});
 const exportQuerySchema = progressListQuerySchema.extend({
   lang: z.enum(['en', 'km']).default('en'),
 });
@@ -24,7 +38,8 @@ export const teacherRoutes: FastifyPluginAsync<{
   people: PeopleService;
   progressReport: ProgressReportService;
   performance: PerformanceService;
-}> = async (app, { teacher, people, progressReport, performance }) => {
+  ranking: RankingService;
+}> = async (app, { teacher, people, progressReport, performance, ranking }) => {
   // Every route in this file: TEACHER (own cohorts only) or ADMIN (everyone).
   app.addHook('preHandler', requireRole('TEACHER', 'ADMIN'));
 
@@ -51,6 +66,32 @@ export const teacherRoutes: FastifyPluginAsync<{
       .header('Content-Disposition', `attachment; filename="learning-progress-${day}.csv"`)
       .header('Cache-Control', 'no-store')
       .send(csv);
+  });
+
+  /** 🏆 The ranking of every student in scope (one class or all), as a PDF report or a CSV file. */
+  app.get('/teacher/ranking/export', async (request, reply) => {
+    const { format, period, cohortId, lang } = parseWith(rankingExportSchema, request.query);
+    const actor = currentUser(request);
+    let cohortName: string | null = null;
+    if (cohortId) {
+      const cohort = (await people.listCohorts(actor)).find((c) => c.id === cohortId);
+      if (!cohort) throw AppError.notFound('COHORT_NOT_FOUND', 'Class not found');
+      cohortName = cohort.name;
+    }
+    const rows = await ranking.exportRows(actor, period, cohortId);
+    const info = { period, lang, cohortName, now: new Date() };
+    const name = `student-ranking-${period}-${info.now.toISOString().slice(0, 10)}`;
+    reply.header('Cache-Control', 'no-store');
+    if (format === 'csv') {
+      return reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${name}.csv"`)
+        .send(rankingCsv(rows, info));
+    }
+    return reply
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${name}.pdf"`)
+      .send(await rankingPdf(rows, info));
   });
 
   app.get('/teacher/students/:id', async (request): Promise<ApiSuccess<StudentDetail>> => {

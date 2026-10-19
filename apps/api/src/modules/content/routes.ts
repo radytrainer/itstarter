@@ -20,7 +20,10 @@ import type { ProgressService } from '../progress/service';
 import type { ContentService } from './service';
 
 const idParams = z.object({ id: z.uuid() });
-const rankingQuery = z.object({ period: z.enum(RANKING_PERIODS).default('all') });
+const rankingQuery = z.object({
+  period: z.enum(RANKING_PERIODS).default('all'),
+  page: z.coerce.number().int().min(1).max(10_000).default(1),
+});
 
 interface Options {
   content: ContentService;
@@ -97,13 +100,13 @@ export const contentRoutes: FastifyPluginAsync<Options> = async (
     }),
   );
 
-  /** 🏆 Everyone signed in sees the top students by XP; students also see their own place. */
+  /** 🏆 Everyone signed in sees every student ranked by XP (50 per page) and their own place. */
   app.get(
     '/ranking',
     { preHandler: requireAuth() },
     async (request): Promise<ApiSuccess<RankingView>> => {
-      const { period } = parseWith(rankingQuery, request.query);
-      return { success: true, data: await ranking.ranking(currentUser(request), period) };
+      const { period, page } = parseWith(rankingQuery, request.query);
+      return { success: true, data: await ranking.ranking(currentUser(request), period, page) };
     },
   );
 

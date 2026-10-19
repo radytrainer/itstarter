@@ -19,7 +19,14 @@ test('students see the ranking and their own place, all time and this week', asy
   await expect(
     page.getByText(/You are #\d+ of \d+|Finish a lesson to join the ranking!/),
   ).toBeVisible();
-  await expect(page.getByRole('heading', { name: /^Top \d+$/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^All students/ })).toBeVisible();
+  // A student with a place can jump straight to their own row.
+  const findMe = page.getByRole('link', { name: /Find me in the list/ });
+  if (await findMe.isVisible()) {
+    await findMe.click();
+    await expect(page).toHaveURL(/#me$/);
+    await expect(page.locator('#me')).toBeInViewport();
+  }
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 900 });
     await expectNoHorizontalScroll(page);
@@ -40,4 +47,24 @@ test('students see the ranking and their own place, all time and this week', asy
   await page.goto('/ranking');
   await expect(page.getByRole('heading', { level: 1, name: /ចំណាត់ថ្នាក់/ })).toBeVisible();
   await expectNoHorizontalScroll(page);
+});
+
+test('staff download the ranking as a PDF report and as a CSV file', async ({ page }) => {
+  await setLanguage(page, 'en');
+  await login(page, 'admin');
+  await page.goto('/ranking');
+  await expect(page.getByText(/Staff accounts are not ranked/)).toBeVisible();
+  await page.getByRole('link', { name: /Export \(PDF \/ Excel\)/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Ranking/ })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+
+  const pdf = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download PDF/ }).click();
+  const file = await pdf;
+  expect(file.suggestedFilename()).toMatch(/^student-ranking-all-\d{4}-\d{2}-\d{2}\.pdf$/);
+
+  await page.getByLabel('Period').selectOption('week');
+  const csv = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download CSV/ }).click();
+  expect((await csv).suggestedFilename()).toMatch(/^student-ranking-week-.*\.csv$/);
 });

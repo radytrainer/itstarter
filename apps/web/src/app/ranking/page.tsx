@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { RANKING_PERIODS, type RankingEntry, type RankingView } from '@itstarter/shared';
 import { AppShell } from '@/components/app-shell';
+import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { apiGet } from '@/lib/server-api';
 import { requireUser } from '@/lib/session';
@@ -28,12 +29,14 @@ function Place({ rank }: { rank: number | null }) {
   );
 }
 
-async function Row({ entry }: { entry: RankingEntry }) {
+/** One student. `anchor` gives your own row id="me", so "Find me" can jump to it. */
+async function Row({ entry, anchor = false }: { entry: RankingEntry; anchor?: boolean }) {
   const t = await getTranslations('ranking');
   return (
     <li
+      id={anchor && entry.isYou ? 'me' : undefined}
       aria-current={entry.isYou ? 'true' : undefined}
-      className={`flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2 ${
+      className={`flex min-h-14 scroll-mt-24 items-center gap-3 rounded-2xl px-3 py-2 ${
         entry.isYou ? 'bg-brand-50 ring-2 ring-brand-500' : 'odd:bg-slate-50'
       }`}
     >
@@ -53,31 +56,53 @@ async function Row({ entry }: { entry: RankingEntry }) {
   );
 }
 
-/** 🏆 Ranking: the top students by XP. Everyone signed in can see it; students see their place. */
+/**
+ * 🏆 Ranking: every student by XP, 50 per page. Students see their own place, the students near
+ * them, and can jump to their row. Staff also get a link to the PDF / CSV export.
+ */
 export default async function RankingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; page?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const period = RANKING_PERIODS.find((p) => p === params.period) ?? 'all';
+  const page = Math.max(1, Math.floor(Number(params.page)) || 1);
   const [view, t] = await Promise.all([
-    apiGet<RankingView>(`/api/ranking?period=${period}`),
+    apiGet<RankingView>(`/api/ranking?period=${period}&page=${page}`),
     getTranslations('ranking'),
   ]);
-  const you = view.you;
+  const { you } = view;
+  const href = (p: number, hash = '') => {
+    const q = new URLSearchParams();
+    if (period !== 'all') q.set('period', period);
+    if (p > 1) q.set('page', String(p));
+    const query = q.toString();
+    return `/ranking${query ? `?${query}` : ''}${hash}`;
+  };
   // The nearest student ahead of you: how much XP you need to reach their place.
   const ahead =
     you && you.rank !== null
-      ? [...view.top, ...view.around].filter((e) => e.xp > you.xp).sort((a, b) => a.xp - b.xp)[0]
+      ? [...view.entries, ...view.around]
+          .filter((e) => e.xp > you.xp)
+          .sort((a, b) => a.xp - b.xp)[0]
       : undefined;
+  const first = (view.page - 1) * view.pageSize + 1;
+  const last = first + view.entries.length - 1;
 
   return (
     <AppShell signedIn>
-      <div>
-        <h1 className="text-3xl font-extrabold">🏆 {t('title')}</h1>
-        <p className="text-lg text-muted">{t('intro')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-extrabold">🏆 {t('title')}</h1>
+          <p className="text-lg text-muted">{t('intro')}</p>
+        </div>
+        {user.role !== 'STUDENT' && (
+          <ButtonLink href="/admin/ranking" variant="secondary">
+            📄 {t('export')}
+          </ButtonLink>
+        )}
       </div>
 
       <nav aria-label={t('periodLabel')} className="flex gap-2">
@@ -93,17 +118,19 @@ export default async function RankingPage({
         ))}
       </nav>
 
+      {user.role !== 'STUDENT' && <p className="text-muted">{t('staffNote')}</p>}
+
       {you && (
-        <Card className="flex items-center gap-4 border-brand-200 bg-brand-50">
+        <Card className="flex flex-wrap items-center gap-4 border-brand-200 bg-brand-50">
           <span className="text-4xl" aria-hidden="true">
             {you.rank !== null ? (MEDALS[you.rank] ?? '⭐') : '🌱'}
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-extrabold">{t('yourPlace')}</h2>
             {you.rank !== null ? (
-              <p className="text-lg">
+              <p className="text-2xl font-extrabold">
                 {t('youAre', { rank: you.rank, total: view.ranked })} ·{' '}
-                <span className="font-extrabold text-amber-700">{t('xp', { xp: you.xp })}</span>
+                <span className="text-amber-700">{t('xp', { xp: you.xp })}</span>
               </p>
             ) : (
               <p className="text-lg">{t(`notYet.${period}`)}</p>
@@ -116,6 +143,11 @@ export default async function RankingPage({
                   : t('keepGoing')}
             </p>
           </div>
+          {view.yourPage !== null && (
+            <ButtonLink href={href(view.yourPage, '#me')} variant="primary">
+              📍 {t('findMe')}
+            </ButtonLink>
+          )}
         </Card>
       )}
 
@@ -132,18 +164,44 @@ export default async function RankingPage({
         </Card>
       )}
 
-      <Card as="section" aria-labelledby="top-title" className="flex flex-col gap-3">
-        <h2 id="top-title" className="text-xl font-extrabold">
-          {t('top', { count: view.top.length })}
+      <Card as="section" aria-labelledby="all-title" className="flex flex-col gap-3">
+        <h2 id="all-title" className="text-xl font-extrabold">
+          {view.entries.length > 0
+            ? t('showing', { first, last, total: view.ranked })
+            : t('allStudents')}
         </h2>
-        {view.top.length === 0 ? (
+        {view.entries.length === 0 ? (
           <p className="text-muted">{t(`empty.${period}`)}</p>
         ) : (
           <ol className="flex flex-col gap-1">
-            {view.top.map((entry, i) => (
-              <Row key={`${entry.rank}-${i}`} entry={entry} />
+            {view.entries.map((entry, i) => (
+              <Row key={`${entry.rank}-${i}`} entry={entry} anchor />
             ))}
           </ol>
+        )}
+        {view.pages > 1 && (
+          <nav
+            aria-label={t('pagesLabel')}
+            className="flex flex-wrap items-center justify-between gap-2 pt-2"
+          >
+            {view.page > 1 ? (
+              <ButtonLink href={href(view.page - 1)} variant="secondary">
+                ← {t('previous')}
+              </ButtonLink>
+            ) : (
+              <span />
+            )}
+            <span className="font-bold text-muted">
+              {t('pageOf', { page: view.page, pages: view.pages })}
+            </span>
+            {view.page < view.pages ? (
+              <ButtonLink href={href(view.page + 1)} variant="secondary">
+                {t('next')} →
+              </ButtonLink>
+            ) : (
+              <span />
+            )}
+          </nav>
         )}
       </Card>
     </AppShell>

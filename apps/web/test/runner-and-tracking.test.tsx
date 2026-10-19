@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, renderHook, screen, waitFor } from '@testing-library/react';
 import {
   commitmentScore,
   type LessonPlay,
@@ -213,23 +213,37 @@ describe('reward step', () => {
 });
 
 describe('listen button', () => {
-  it('reads the English aloud (slowly too), and hides where the browser cannot speak', () => {
+  it('reads the English aloud with a clear English voice (slowly too: two words at a time), and hides where the browser cannot speak', async () => {
     const speak = vi.fn();
-    vi.stubGlobal('speechSynthesis', { speak, cancel: vi.fn(), getVoices: () => [] });
+    const voices = [
+      { name: 'Khmer', lang: 'km-KH', localService: true },
+      { name: 'eSpeak English', lang: 'en-US', localService: true },
+      { name: 'Google US English', lang: 'en-US', localService: false },
+    ];
+    vi.stubGlobal('speechSynthesis', {
+      speak,
+      cancel: vi.fn(),
+      getVoices: () => voices,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
     vi.stubGlobal(
       'SpeechSynthesisUtterance',
       class {
         lang = '';
         rate = 1;
+        voice: { name: string } | null = null;
         constructor(public text: string) {}
       },
     );
     render(<SpeakButton text="Nice to meet you." />);
     fireEvent.click(screen.getByRole('button', { name: 'Listen' }));
     fireEvent.click(screen.getByRole('button', { name: 'Listen slowly' }));
-    expect(speak.mock.calls.map(([u]) => [u.text, u.lang, u.rate])).toEqual([
-      ['Nice to meet you.', 'en-US', 0.9],
-      ['Nice to meet you.', 'en-US', 0.6],
+    await waitFor(() => expect(speak).toHaveBeenCalledTimes(3));
+    expect(speak.mock.calls.map(([u]) => [u.text, u.lang, u.rate, u.voice?.name])).toEqual([
+      ['Nice to meet you.', 'en-US', 0.85, 'Google US English'],
+      ['Nice to', 'en-US', 0.7, 'Google US English'],
+      ['meet you.', 'en-US', 0.7, 'Google US English'],
     ]);
     cleanup();
 

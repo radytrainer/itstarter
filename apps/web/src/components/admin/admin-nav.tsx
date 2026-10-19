@@ -9,6 +9,7 @@ const ITEMS = [
   { href: '/admin', key: 'overview', icon: '📊', roles: ['TEACHER', 'ADMIN'] },
   { href: '/admin/progress', key: 'progress', icon: '📋', roles: ['TEACHER', 'ADMIN'] },
   { href: '/admin/analytics', key: 'analytics', icon: '📈', roles: ['TEACHER', 'ADMIN'] },
+  { href: '/admin/ranking', key: 'ranking', icon: '🏆', roles: ['TEACHER', 'ADMIN'] },
   { href: '/admin/students', key: 'students', icon: '🎓', roles: ['TEACHER', 'ADMIN'] },
   { href: '/admin/content', key: 'content', icon: '📚', roles: ['ADMIN'] },
   { href: '/admin/badges', key: 'badges', icon: '🏅', roles: ['ADMIN'] },

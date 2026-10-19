@@ -135,6 +135,7 @@ export async function buildApp(config: AppConfig, deps: AppDeps): Promise<Fastif
     people,
     progressReport,
     performance,
+    ranking,
   });
   await app.register(adminRoutes, { prefix: '/api', db: deps.db, people, content: adminContent });
   await app.register(analyticsRoutes, { prefix: '/api', analytics });

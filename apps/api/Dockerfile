@@ -31,6 +31,8 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY apps/api/drizzle ./apps/api/drizzle
+# Fonts for PDF exports (Battambang shows Khmer and English; SIL Open Font License).
+COPY apps/api/assets ./apps/api/assets
 COPY apps/api/package.json ./apps/api/
 USER node
 EXPOSE 4000

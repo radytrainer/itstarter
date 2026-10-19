@@ -348,7 +348,8 @@
       "content": "Content",
       "badges": "Badges",
       "staff": "Staff & classes",
-      "audit": "Activity log"
+      "audit": "Activity log",
+      "ranking": "Ranking"
     },
     "common": {
       "save": "Save",
@@ -613,6 +614,19 @@
       "sortedBy": "Sorted by {column}",
       "commitment": "Commitment",
       "sortCommitment": "Commitment"
+    },
+    "ranking": {
+      "title": "Ranking",
+      "intro": "Every student ranked by XP. Download it as a PDF report to print or share, or as a CSV file for Excel and Google Sheets.",
+      "view": "Open the ranking page",
+      "exportTitle": "Download the ranking",
+      "class": "Class",
+      "allClasses": "All classes",
+      "period": "Period",
+      "language": "Language of the file",
+      "pdf": "Download PDF",
+      "csv": "Download CSV (Excel)",
+      "help": "The PDF is an A4 report with rank, name, username, class, XP, level and lessons. The CSV has the same columns plus total XP and the last active day, and opens in Excel with Khmer names."
     }
   },
   "offline": {
@@ -712,7 +726,6 @@
       "week": "Earn XP this week to join the ranking!"
     },
     "keepGoing": "Every lesson brings you closer to the top. 🚀",
-    "top": "Top {count}",
     "place": "Place {rank}",
     "you": "you",
     "xp": "{xp} XP",
@@ -722,6 +735,15 @@
     },
     "nearYou": "Students near you",
     "toMoveUp": "Earn {xp} more XP to reach #{rank}! 🚀",
-    "first": "You are number 1 — amazing! 🎉"
+    "first": "You are number 1 — amazing! 🎉",
+    "findMe": "Find me in the list",
+    "showing": "All students: #{first}–{last} of {total}",
+    "allStudents": "All students",
+    "pagesLabel": "Ranking pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "export": "Export (PDF / Excel)",
+    "staffNote": "Staff accounts are not ranked — this list shows the students."
   }
 }
